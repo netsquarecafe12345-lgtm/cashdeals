@@ -1,0 +1,418 @@
+a<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CashDeal Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { background: #f5f6fa; }
+  /* Login / Signup */
+  #auth-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+  .auth-box {
+    background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    width: 350px;
+  }
+  .auth-box h2 { text-align: center; margin-bottom: 20px; }
+  .auth-box input {
+    width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;
+  }
+  .auth-box button {
+    width: 100%; padding: 10px; background: #1e90ff; color: #fff; border: none; border-radius: 4px;
+    cursor: pointer;
+  }
+  .switch {
+    text-align: center; margin-top: 10px; color: #1e90ff; cursor: pointer; user-select: none;
+  }
+  /* Dashboard */
+  #dashboard { display: none; height: 100vh; display: flex; }
+  .sidebar {
+    width: 220px; background: #1e1e1e; color: #fff; display: flex; flex-direction: column; padding-top: 20px;
+  }
+  .sidebar h2 { text-align: center; margin-bottom: 30px; }
+  .sidebar a {
+    padding: 15px 20px; text-decoration: none; color: white; display: block;
+  }
+  .sidebar a:hover { background: #333; }
+  .main { flex: 1; display: flex; flex-direction: column; }
+  header {
+    background: #1e1e1e; color: white; padding: 15px 30px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  header .header-right {
+    display: flex; align-items: center; gap: 15px;
+  }
+  header button {
+    background: #1e90ff; color: white; border: none; padding: 6px 12px; border-radius: 4px;
+    cursor: pointer;
+  }
+  .profile-container {
+    display: flex; align-items: center; cursor: pointer; gap: 10px;
+  }
+  .profile-container img {
+    width: 30px; height: 30px; border-radius: 50%;
+  }
+  .profile-container span { color: white; font-size: 14px; }
+  .container { padding: 20px; overflow: auto; flex: 1; }
+  table {
+    width: 100%; border-collapse: collapse; background: white; border-radius: 8px;
+    overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;
+  }
+  th, td {
+    padding: 12px 15px; text-align: left;
+  }
+  th {
+    background: #1e90ff; color: white;
+  }
+  tr:nth-child(even) { background: #f9f9f9; }
+  .coin-name {
+    text-align: left; display: flex; align-items: center;
+  }
+  .coin-logo {
+    width: 24px; height: 24px; margin-right: 10px; border-radius: 50%;
+    background: #f0f0f0; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 10px; color: white;
+  }
+  .price-change.positive { color: green; }
+  .price-change.negative { color: red; }
+  canvas { display: block; margin-top: 5px; width: 100px; height: 40px; }
+  /* BTC Converter Stats Table */
+  .converter-stats {
+    width: 100%; border-collapse: collapse; background: white; border-radius: 8px;
+    overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 10px;
+  }
+  .converter-stats th, .converter-stats td {
+    padding: 12px 15px; text-align: left;
+  }
+  .converter-stats th { background: #1e90ff; color: white; }
+  .converter-stats tbody tr:nth-child(even) { background: #f9f9f9; }
+  .change-cell.negative { color: red; font-weight: bold; }
+
+  /* Profile Modal */
+  #profile-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+  }
+  #profile-modal .modal-content {
+    background: white; padding: 30px; border-radius: 10px; width: 320px; position: relative;
+  }
+  #profile-modal h3 { text-align: center; margin-bottom: 20px; }
+  #profile-modal label {
+    display: block; margin-bottom: 6px; font-weight: bold;
+  }
+  #profile-modal input {
+    width: 100%; padding: 8px; margin-bottom: 15px;
+    border: 1px solid #ccc; border-radius: 4px;
+  }
+  #profile-modal button {
+    width: 100%; padding: 10px; background: #1e90ff;
+    border: none; color: white; border-radius: 5px; cursor: pointer;
+  }
+  #profile-close {
+    position: absolute; top: 10px; right: 15px; font-weight: bold;
+    font-size: 20px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- Login / Signup -->
+<div id="auth-container">
+  <div class="auth-box">
+    <h2 id="auth-title">Login</h2>
+    <input type="text" id="auth-username" placeholder="Username" autocomplete="username" />
+    <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
+    <button id="auth-button">Login</button>
+    <div class="switch" id="switch-auth">Don't have an account? Sign Up</div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="sidebar">
+    <h2>CashDeal</h2>
+    <a href="#">Dashboard</a>
+    <a href="#">Assets</a>
+    <a href="#">Orders</a>
+    <a href="#">Spot</a>
+    <a href="#">Settings</a>
+    <a href="#" id="withdraw-link">Withdraw</a>
+    <a href="#" id="convert-link">Convert</a>
+    <a href="#" id="transfer-link">Transfer</a>
+    <a href="#">Trade</a>
+  </div>
+  <div class="main">
+    <header>
+      <span>Welcome, <strong id="username"></strong> | Balance: $<span id="balance"></span></span>
+      <div class="header-right">
+        <div class="profile-container" id="profile-icon">
+          <img src="https://www.w3schools.com/w3images/avatar2.png" alt="Profile Icon" />
+          <span>Profile</span>
+        </div>
+        <button id="logout">Logout</button>
+      </div>
+    </header>
+    <div class="container">
+      <table id="coins-table">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Price (USD)</th><th>24h %</th><th>Market Cap (USD)</th><th>Chart</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <table class="converter-stats">
+        <thead>
+          <tr><th>Stats</th><th>Last 24 hours</th><th>Last 7 days</th><th>Last 30 days</th><th>Last 90 days</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>High</strong></td><td>$5,743,060</td><td>$6,328,176</td><td>$6,869,052</td><td>$7,342,136</td></tr>
+          <tr><td><strong>Low</strong></td><td>$5,555,549</td><td>$5,555,549</td><td>$5,555,549</td><td>$5,811,098</td></tr>
+          <tr><td><strong>Change</strong></td><td class="change-cell negative">-0.01%</td><td class="change-cell negative">-6.4%</td><td class="change-cell negative">-14.65%</td><td class="change-cell negative">-15.27%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profile-modal">
+  <div class="modal-content">
+    <h3>Edit Profile</h3>
+    <form id="profile-form">
+      <label for="email">Email:</label>
+      <input type="email" id="email" placeholder="Enter your email" required />
+      <label for="phone">Phone Number:</label>
+      <input type="tel" id="phone" placeholder="Enter your phone number" />
+      <button type="submit">Save</button>
+      <span id="profile-close">&times;</span>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Elements
+  const authContainer = document.getElementById('auth-container');
+  const dashboard = document.getElementById('dashboard');
+  const authTitle = document.getElementById('auth-title');
+  const authButton = document.getElementById('auth-button');
+  const switchAuth = document.getElementById('switch-auth');
+  const authUsername = document.getElementById('auth-username');
+  const authPassword = document.getElementById('auth-password');
+  const usernameDisplay = document.getElementById('username');
+  const balanceDisplay = document.getElementById('balance');
+  const logoutBtn = document.getElementById('logout');
+
+  let loginMode = true;
+
+  // Initialize users storage if none
+  if (!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify({}));
+
+  // Toggle login/signup UI
+  switchAuth.addEventListener('click', () => {
+    loginMode = !loginMode;
+    if(loginMode) {
+      authTitle.textContent = 'Login';
+      authButton.textContent = 'Login';
+      switchAuth.textContent = "Don't have an account? Sign Up";
+      authPassword.placeholder = 'Password';
+      authPassword.autocomplete = 'current-password';
+    } else {
+      authTitle.textContent = 'Sign Up';
+      authButton.textContent = 'Sign Up';
+      switchAuth.textContent = "Already have an account? Login";
+      authPassword.placeholder = 'Choose Password';
+      authPassword.autocomplete = 'new-password';
+    }
+    authUsername.value = '';
+    authPassword.value = '';
+    authUsername.focus();
+  });
+
+  // Login or Signup handler
+  authButton.addEventListener('click', () => {
+    const username = authUsername.value.trim();
+    const password = authPassword.value;
+
+    if (!username || !password) {
+      alert("Enter username and password");
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+
+    if (loginMode) {
+      if(users[username] && users[username].password === password) {
+        localStorage.setItem('currentUser', username);
+        showDashboard(users[username]);
+        authUsername.value = '';
+        authPassword.value = '';
+      } else {
+        alert('Invalid username or password');
+      }
+    } else {
+      if(users[username]) {
+        alert('Username already exists');
+      } else {
+        users[username] = { password: password, balance: 150000 };
+        localStorage.setItem('users', JSON.stringify(users));
+        alert('Account created! You can now login.');
+        loginMode = true;
+        authTitle.textContent = 'Login';
+        authButton.textContent = 'Login';
+        switchAuth.textContent = "Don't have an account? Sign Up";
+        authPassword.placeholder = 'Password';
+        authPassword.autocomplete = 'current-password';
+        authUsername.value = '';
+        authPassword.value = '';
+        authUsername.focus();
+      }
+    }
+  });
+
+  // Show Dashboard
+  function showDashboard(userData){
+    authContainer.style.display = 'none';
+    dashboard.style.display = 'flex';
+    usernameDisplay.textContent = localStorage.getItem('currentUser');
+    balanceDisplay.textContent = userData.balance.toLocaleString();
+    loadTable();
+  }
+
+  // Logout clears session and show login screen
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('currentUser');
+    dashboard.style.display = 'none';
+    authContainer.style.display = 'flex';
+    authUsername.value = '';
+    authPassword.value = '';
+    authUsername.focus();
+  });
+
+  // Coin Data
+  const coinsData = [
+    {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
+    {name:"Ethereum",symbol:"ETH",price:90000,change:-1.2,market:900000000,spark:[88000,89000,89500,90500,90000],color:"#627EEA"},
+    {name:"Tether",symbol:"USDT",price:55,change:0.1,market:600000000,spark:[55,55,55,55,55],color:"#26A17B"},
+    {name:"USD Coin",symbol:"USDC",price:55,change:-0.05,market:550000000,spark:[55,55,55,55,55],color:"#2775CA"},
+    {name:"AAVE",symbol:"AAVE",price:7500,change:1.5,market:600000000,spark:[7400,7450,7500,7550,7500],color:"#B6509E"},
+    {name:"Cardano",symbol:"ADA",price:80,change:1.0,market:1000000000,spark:[78,79,80,81,80],color:"#0033AD"},
+    {name:"AEVO",symbol:"AEVO",price:500,change:-0.5,market:200000000,spark:[495,500,505,510,505],color:"#1C1C1C"},
+    {name:"ApeCoin",symbol:"APE",price:2500,change:0.5,market:500000000,spark:[2450,2500,2550,2600,2500],color:"#0052FF"},
+    {name:"Arkham",symbol:"ARK",price:3000,change:2.2,market:600000000,spark:[2900,2950,3000,3050,3000],color:"#FF6B00"},
+    {name:"Aster",symbol:"ASTER",price:1000,change:1.8,market:450000000,spark:[990,995,1000,1010,1005],color:"#00A3FF"}
+  ];
+
+  function drawSparkline(canvas, prices, positive=true){
+    canvas.width=100; canvas.height=40;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.beginPath();
+    const max=Math.max(...prices), min=Math.min(...prices);
+    const stepX=canvas.width/(prices.length-1);
+    prices.forEach((p,i)=>{
+      const x=i*stepX;
+      const y=canvas.height-((p-min)/(max-min||1))*canvas.height;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=positive?'green':'red';
+    ctx.lineWidth=2; ctx.stroke();
+  }
+
+  function loadTable(){
+    const tbody=document.querySelector("#coins-table tbody");
+    tbody.innerHTML='';
+    coinsData.forEach((coin,i)=>{
+      const tr=document.createElement('tr');
+      const changeClass=coin.change>=0?'positive':'negative';
+
+      const logoDiv = document.createElement('div');
+      logoDiv.className = 'coin-logo';
+      logoDiv.style.backgroundColor = coin.color;
+      logoDiv.textContent = coin.symbol.substring(0,3);
+
+      tr.innerHTML=`
+        <td>${i+1}</td>
+        <td class="coin-name"></td>
+        <td>${coin.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        <td class="price-change ${changeClass}">${coin.change.toFixed(2)}%</td>
+        <td>${coin.market.toLocaleString()}</td>
+        <td><canvas></canvas></td>
+      `;
+
+      const coinNameCell = tr.querySelector('.coin-name');
+      coinNameCell.appendChild(logoDiv);
+      coinNameCell.appendChild(document.createTextNode(` ${coin.symbol} - ${coin.name}`));
+      tbody.appendChild(tr);
+      drawSparkline(tr.querySelector('canvas'), coin.spark, coin.change>=0);
+    });
+  }
+
+  function updatePricesAndCharts() {
+    coinsData.forEach((coin, i) => {
+      const changePercent = (Math.random() * 2 - 1) * 1;
+      const newPrice = Math.max(1, coin.price + coin.price * changePercent / 100);
+      coin.price = newPrice;
+      coin.spark.shift();
+      coin.spark.push(newPrice);
+      coin.change = ((coin.spark[coin.spark.length-1] - coin.spark[0]) / coin.spark[0]) * 100;
+
+      const tbody = document.querySelector("#coins-table tbody");
+      const row = tbody.children[i];
+      if(!row) return;
+
+      row.children[2].textContent = newPrice.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+      const changeCell = row.children[3];
+      changeCell.textContent = coin.change.toFixed(2) + '%';
+      changeCell.className = 'price-change ' + (coin.change >= 0 ? 'positive' : 'negative');
+
+      drawSparkline(row.querySelector('canvas'), coin.spark, coin.change >= 0);
+    });
+  }
+
+  // Auto-login
+  const currentUser = localStorage.getItem('currentUser');
+  if(currentUser){
+    const users=JSON.parse(localStorage.getItem('users'));
+    if(users[currentUser]) showDashboard(users[currentUser]);
+  }
+
+  setInterval(() => {
+    if(dashboard.style.display==='flex'){
+      updatePricesAndCharts();
+    }
+  }, 2000);
+
+  // Profile Modal logic
+  const profileIcon = document.getElementById('profile-icon');
+  const profileModal = document.getElementById('profile-modal');
+  const profileClose = document.getElementById('profile-close');
+  const profileForm = document.getElementById('profile-form');
+
+  profileIcon.addEventListener('click', () => {
+    profileModal.style.display = 'flex';
+  });
+
+  profileClose.addEventListener('click', () => {
+    profileModal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (e) => {
+    if (e.target === profileModal) {	
+      profileModal.style.display = 'none';
+    }
+  });
+
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    if(!email) {
+      alert('Please enter a valid email.');
+      return;
+    }
+    alert(`Profile saved:\nEmail: ${email}\nPhone: ${phone}`);
+    profileModal.style.display = 'none';
+    // Optionally, add persistent profile saving here
+  });
+</script>
+</body>
+</html>
