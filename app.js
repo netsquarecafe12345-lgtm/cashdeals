@@ -1,24 +1,29 @@
-// -------------------------
-// IMPORTS
-// -------------------------
+// -----------------------------
+// FIREBASE IMPORTS
+// -----------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  onAuthStateChanged 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { 
-  getFirestore, 
-  collection, 
-  getDocs 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
-// -------------------------
+// -----------------------------
 // FIREBASE CONFIG
-// -------------------------
+// -----------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
   authDomain: "cashdeals-185df.firebaseapp.com",
@@ -34,9 +39,9 @@ const auth = getAuth();
 const db = getFirestore();
 
 
-// -------------------------
-// LOGIN FUNCTION
-// -------------------------
+// ------------------------------------
+// LOGIN
+// ------------------------------------
 export async function loginUser(event) {
   event.preventDefault();
 
@@ -46,31 +51,69 @@ export async function loginUser(event) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     window.location.href = "admin.html";
-  } catch (error) {
-    alert("Login failed: " + error.message);
+  } catch (e) {
+    alert("Login Failed: " + e.message);
   }
 }
 
 
-// -------------------------
-// LOAD CLIENT DATA
-// -------------------------
+// ------------------------------------
+// REGISTER (PUBLIC SIGN UP)
+// ------------------------------------
+export async function registerUser(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("reg-email").value;
+  const username = document.getElementById("reg-username").value;
+  const phone = document.getElementById("reg-phone").value;
+  const password = document.getElementById("reg-password").value;
+
+  try {
+    // Create Firebase Auth account
+    await createUserWithEmailAndPassword(auth, email, password);
+
+    // Save in Firestore INCLUDING PASSWORD (your request)
+    await addDoc(collection(db, "clients"), {
+      email,
+      username,
+      phone,
+      password,
+      balance: 0,
+      status: "active"
+    });
+
+    alert("Account Created!");
+    window.location.href = "index.html";
+  } catch (e) {
+    alert("Sign Up Failed: " + e.message);
+  }
+}
+
+
+// ------------------------------------
+// LOAD CLIENTS TO ADMIN TABLE
+// ------------------------------------
 async function loadClients() {
   const table = document.getElementById("clientTable");
+  table.innerHTML = "";
 
-  table.innerHTML = ""; // clear first
+  const snap = await getDocs(collection(db, "clients"));
 
-  const snapshot = await getDocs(collection(db, "clients"));
-  snapshot.forEach((doc) => {
-    const data = doc.data();
+  snap.forEach((docSnap) => {
+    const data = docSnap.data();
+    const id = docSnap.id;
 
     const row = `
       <tr>
-        <td>${data.email || ""}</td>
-        <td>${data.username || ""}</td>
-        <td>${data.password || ""}</td>
-        <td>${data.phone || ""}</td>
-        <td>${data.balance || 0}</td>
+        <td>${data.email}</td>
+        <td>${data.username}</td>
+        <td>${data.password}</td>
+        <td>${data.phone}</td>
+        <td>${data.balance}</td>
+        <td>
+          <button class="edit-btn" onclick="editBalance('${id}', '${data.balance}')">Edit</button>
+          <button class="del-btn" onclick="deleteUser('${id}')">Delete</button>
+        </td>
       </tr>
     `;
 
@@ -79,24 +122,48 @@ async function loadClients() {
 }
 
 
-// -------------------------
-// AUTH CHECKER
-// -------------------------
+// ------------------------------------
+// EDIT BALANCE
+// ------------------------------------
+window.editBalance = async function (userId, oldBalance) {
+  const newBalance = prompt("Enter new balance:", oldBalance);
+
+  if (newBalance === null) return;
+
+  await updateDoc(doc(db, "clients", userId), {
+    balance: Number(newBalance)
+  });
+
+  alert("Balance updated!");
+  loadClients();
+};
+
+
+// ------------------------------------
+// DELETE USER
+// ------------------------------------
+window.deleteUser = async function (userId) {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+
+  await deleteDoc(doc(db, "clients", userId));
+
+  alert("User deleted.");
+  loadClients();
+};
+
+
+// ------------------------------------
+// AUTH CHECK (ADMIN ONLY PAGE)
+// ------------------------------------
 onAuthStateChanged(auth, (user) => {
   const page = window.location.pathname.split("/").pop();
 
-  // If admin.html but not logged in → redirect to login
   if (page === "admin.html") {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
+    if (!user) window.location.href = "index.html";
 
-    // Show admin email
     document.getElementById("admin-email").innerText =
       "Logged in as: " + user.email;
 
-    // Load client list
     loadClients();
   }
 });
