@@ -1,71 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up</title>
-
-  <style>
-    body {
-      background: #0a0a0a;
-      color: white;
-      font-family: Arial;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .box {
-      width: 350px;
-      padding: 25px;
-      background: #111;
-      border-radius: 10px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #555;
-      background: #222;
-      color: white;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      background: #ff6a00;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      color: white;
-      cursor: pointer;
-    }
-  </style>
+    <title>Sign Up</title>
 </head>
-
 <body>
-  <div class="box">
-    <h2>Create Account</h2>
 
-    <form onsubmit="registerUser(event)">
-      <input id="reg-email" type="email" placeholder="Email" required>
-      <input id="reg-username" type="text" placeholder="Username" required>
-      <input id="reg-phone" type="text" placeholder="Phone Number" required>
-      <input id="reg-password" type="password" placeholder="Password" required>
+<h2>Create Account</h2>
 
-      <button type="submit">Sign Up</button>
-    </form>
+<input type="email" id="signup-email" placeholder="Email"><br><br>
+<input type="password" id="signup-password" placeholder="Password"><br><br>
+<button id="signup-button">Create Account</button>
 
-    <p style="margin-top:15px;text-align:center;">
-      Already have an account?  
-      <a href="index.html" style="color:#ff6a00;">Login</a>
-    </p>
-  </div>
+<p>Already have an account? <a href="login.html">Log in</a></p>
 
-  <script type="module" src="app.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAAN0WFvnIzmvELoBVvLN0rR06F2VAs0",
+        authDomain: "cashdeals-185df.firebaseapp.com",
+        projectId: "cashdeals-185df",
+        storageBucket: "cashdeals-185df.appspot.com",
+        messagingSenderId: "749879075742",
+        appId: "1:749879075742:web:0fe648f7a9faebdc9aac8f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("signup-button").addEventListener("click", async () => {
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+            alert("Account created! You can now log in.");
+            window.location.href = "login.html";
+        } catch (err) {
+            alert("Signup failed: " + err.message);
+        }
+    });
+</script>
+
 </body>
 </html>
