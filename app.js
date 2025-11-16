@@ -1,111 +1,83 @@
-// Handle Login / Sign Up
-let loginMode = true;
-const authButton = document.getElementById('auth-button');
-const authUsername = document.getElementById('auth-username');
-const authPassword = document.getElementById('auth-password');
-const switchAuth = document.getElementById('switch-auth');
-const authTitle = document.getElementById('auth-title');
+// Firebase SDKs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// Switch between login and sign up
-switchAuth.addEventListener('click', () => {
-  loginMode = !loginMode;
-  authTitle.textContent = loginMode ? 'Login' : 'Sign Up';
-  authButton.textContent = loginMode ? 'Login' : 'Sign Up';
-  switchAuth.textContent = loginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
-});
 
-// Handle login/signup button
-authButton.addEventListener('click', () => {
-  const username = authUsername.value.trim();
-  const password = authPassword.value.trim();
+// Your Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+  authDomain: "cashdeals-185df.firebaseapp.com",
+  projectId: "cashdeals-185df",
+  storageBucket: "cashdeals-185df.firebasestorage.app",
+  messagingSenderId: "749879075742",
+  appId: "1:749879075742:web:0fe6487fa9faedbc9aac8f"
+};
 
-  if (!username || !password) {
-    alert('Please enter both username and password.');
-    return;
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+
+
+// -------------------------
+// SIGNUP FUNCTION
+// -------------------------
+window.signup = function() {
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      alert("Admin account created!");
+      window.location.href = "login.html";
+    })
+    .catch(err => alert(err.message));
+};
+
+
+// -------------------------
+// LOGIN FUNCTION
+// -------------------------
+window.login = function() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      window.location.href = "admin.html";
+    })
+    .catch(err => alert(err.message));
+};
+
+
+// -------------------------
+// LOGOUT
+// -------------------------
+window.logout = function() {
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  });
+};
+
+
+// -------------------------
+// PROTECT ADMIN PAGE
+// -------------------------
+onAuthStateChanged(auth, user => {
+  const protectedPages = ["admin.html"];
+
+  const currentPage = window.location.pathname.split("/").pop();
+
+  if (protectedPages.includes(currentPage) && !user) {
+    window.location.href = "login.html";
   }
 
-  const users = JSON.parse(localStorage.getItem('users') || '{}');
-
-  if (loginMode) {
-    // Login logic
-    if (users[username] && users[username].password === password) {
-      localStorage.setItem('currentUser', username);
-      showDashboard(users[username]);
-    } else {
-      alert('Invalid username or password');
-    }
-  } else {
-    // Sign-up logic
-    if (users[username]) {
-      alert('Username already exists');
-    } else {
-      users[username] = { password, balance: 1000 }; // Create new user with balance
-      localStorage.setItem('users', JSON.stringify(users));
-      alert('Account created successfully!');
-      loginMode = true;
-      authTitle.textContent = 'Login';
-      authButton.textContent = 'Login';
-      switchAuth.textContent = "Don't have an account? Sign Up";
-    }
+  if (user && currentPage === "admin.html") {
+    document.getElementById("admin-email").innerText = "Logged in as: " + user.email;
   }
 });
-
-// Display Dashboard
-function showDashboard(userData) {
-  document.getElementById('auth-container').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'flex';
-  document.getElementById('username').textContent = localStorage.getItem('currentUser');
-  document.getElementById('balance').textContent = userData.balance;
-  loadTable();
-}
-
-// Load cryptocurrency table
-function loadTable() {
-  const coinsData = [
-    { name: "Bitcoin", symbol: "BTC", price: 1200000, change: 2.5, market: 2400000000, spark: [1150000, 1160000, 1175000, 1180000, 1190000, 1200000], color: "#F7931A" },
-    { name: "Ethereum", symbol: "ETH", price: 90000, change: -1.2, market: 900000000, spark: [88000, 89000, 89500, 90500, 90000], color: "#627EEA" },
-    { name: "Tether", symbol: "USDT", price: 55, change: 0.1, market: 600000000, spark: [55, 55, 55, 55, 55], color: "#26A17B" }
-  ];
-
-  const tbody = document.querySelector('#coins-table tbody');
-  tbody.innerHTML = '';
-
-  coinsData.forEach((coin, i) => {
-    const tr = document.createElement('tr');
-    const changeClass = coin.change >= 0 ? 'positive' : 'negative';
-
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${coin.symbol} - ${coin.name}</td>
-      <td>$${coin.price}</td>
-      <td class="price-change ${changeClass}">${coin.change.toFixed(2)}%</td>
-      <td>$${coin.market}</td>
-      <td><canvas width="100" height="40"></canvas></td>
-    `;
-
-    tbody.appendChild(tr);
-    const canvas = tr.querySelector('canvas');
-    drawSparkline(canvas, coin.spark, coin.change >= 0);
-  });
-}
-
-// Draw sparkline chart
-function drawSparkline(canvas, prices, positive = true) {
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  const max = Math.max(...prices), min = Math.min(...prices);
-  const stepX = canvas.width / (prices.length - 1);
-
-  prices.forEach((p, i) => {
-    const x = i * stepX;
-    const y = canvas.height - ((p - min) / (max - min || 1)) * canvas.height;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-
-  ctx.strokeStyle = positive ? 'green' : 'red';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
-setInterval(loadTable, 5000);
