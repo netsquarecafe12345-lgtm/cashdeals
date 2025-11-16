@@ -1,188 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<style>
-    body {
-        font-family: 'Poppins', sans-serif;
-        background: #f4f6fa;
-        margin: 0;
-        padding: 0;
-    }
-
-    .navbar {
-        background: #20232a;
-        padding: 15px 25px;
-        color: white;
-        font-size: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .logout-btn {
-        background: #ff4d4d;
-        border: none;
-        padding: 8px 16px;
-        color: white;
-        font-size: 14px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .container {
-        padding: 25px;
-    }
-
-    h2 {
-        margin-bottom: 15px;
-        font-weight: 600;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    th {
-        background: #343a40;
-        color: white;
-        padding: 12px;
-        text-align: left;
-    }
-
-    td {
-        padding: 12px;
-        border-bottom: 1px solid #eee;
-    }
-
-    tr:hover {
-        background: #f1f1f1;
-    }
-
-    .action-btn {
-        padding: 5px 12px;
-        background: #007bff;
-        color: white;
-        font-size: 12px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .delete-btn {
-        background: #ff3333;
-    }
-</style>
+    <title>Admin Dashboard</title>
 </head>
-
 <body>
 
-<div class="navbar">
-    <span>Admin Panel</span>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
+<h1>Welcome to Admin Dashboard</h1>
 
-<div class="container">
-    <h2>Client Accounts</h2>
+<button id="logout">Logout</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Phone</th>
-                <th>Balance</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="clientTable"></tbody>
-    </table>
-</div>
-
-<!-- Firebase -->
 <script type="module">
-import { 
-    initializeApp 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { 
-    getFirestore, collection, getDocs, deleteDoc, doc 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    const firebaseConfig = {
+        apiKey: "AIzaSyAAN0WFvnIzmvELoBVvLN0rR06F2VAs0",
+        authDomain: "cashdeals-185df.firebaseapp.com",
+        projectId: "cashdeals-185df",
+        storageBucket: "cashdeals-185df.appspot.com",
+        messagingSenderId: "749879075742",
+        appId: "1:749879075742:web:0fe648f7a9faebdc9aac8f"
+    };
 
-import { 
-    getAuth, signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-// Your Firebase Config
-const firebaseConfig = {
-    apiKey: "AIzaSyC_h9qlz2q81yUAXEoyPVnWyZSvb2zIGBA",
-    authDomain: "load-8bc93.firebaseapp.com",
-    projectId: "load-8bc93",
-    storageBucket: "load-8bc93.firebasestorage.app",
-    messagingSenderId: "258928910784",
-    appId: "1:258928910784:web:7ce3bd52ed1affebe61a66"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-// Load Client Data
-async function loadClients() {
-    const table = document.getElementById("clientTable");
-    table.innerHTML = "";
-
-    const clientsRef = collection(db, "clients");
-    const snapshot = await getDocs(clientsRef);
-
-    snapshot.forEach((docu) => {
-        const data = docu.data();
-
-        const row = `
-            <tr>
-                <td>${data.email}</td>
-                <td>${data.username}</td>
-                <td>${data.password}</td>
-                <td>${data.phone}</td>
-                <td>${data.balance}</td>
-                <td>
-                    <button class="action-btn delete-btn" onclick="deleteClient('${docu.id}')">Delete</button>
-                </td>
-            </tr>
-        `;
-
-        table.innerHTML += row;
+    // Redirect to login if NOT logged in
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = "login.html";
+        }
     });
-}
-loadClients();
 
-// Delete client
-window.deleteClient = async function(id) {
-    if (!confirm("Delete this user?")) return;
-
-    await deleteDoc(doc(db, "clients", id));
-    alert("Client deleted.");
-    loadClients();
-};
-
-// Logout
-window.logout = function () {
-    signOut(auth).then(() => {
-        window.location.href = "login.html";
+    document.getElementById("logout").addEventListener("click", () => {
+        signOut(auth);
     });
-};
 </script>
 
 </body>
