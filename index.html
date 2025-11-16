@@ -187,6 +187,59 @@ a<!DOCTYPE html>
     </form>
   </div>
 </div>
+ <!-- Withdraw Modal -->
+<div id="withdraw-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
+    <h3>Withdraw Funds</h3>
+    <p>Select Payment Option:</p>
+    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
+      <option value="BTC">BTC</option>
+      <option value="Coins">Coins</option>
+      <option value="Alipay">Alipay</option>
+      <option value="Wechat">Wechat</option>
+    </select>
+    <input type="number" id="withdraw-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
+    <button id="withdraw-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
+    <span id="withdraw-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div id="transfer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
+    <h3>Transfer Funds</h3>
+    <p>Select Payment Option:</p>
+    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
+      <option value="BTC">BTC</option>
+      <option value="Coins">Coins</option>
+      <option value="Alipay">Alipay</option>
+      <option value="Wechat">Wechat</option>
+    </select>
+    <input type="number" id="transfer-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
+    <button id="transfer-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
+    <span id="transfer-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
+  </div>
+</div>
+<!-- Conversion Modal -->
+<div id="convert-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
+    <h3>Convert BTC</h3>
+    <p>Select Coins for Conversion:</p>
+    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
+      <option value="ETH">ETH</option>
+      <option value="USDT">USDT</option>
+      <option value="USDC">USDC</option>
+      <option value="ADA">ADA</option>
+      <option value="AEVO">AEVO</option>
+      <option value="APE">APE</option>
+      <option value="ASTER">ASTER</option>
+    </select>
+    <input type="number" id="transfer-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
+    <button id="convert-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
+    <span id="convert-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
+  </div>
+</div>
+
 
 <script>
   // Elements
