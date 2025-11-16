@@ -466,6 +466,98 @@ a<!DOCTYPE html>
     profileModal.style.display = 'none';
     // Optionally, add persistent profile saving here
   });
+ // Modal logic for Withdraw
+const withdrawLink = document.getElementById('withdraw-link');
+const withdrawModal = document.getElementById('withdraw-modal');
+const withdrawClose = document.getElementById('withdraw-close');
+const withdrawConfirm = document.getElementById('withdraw-confirm');
+
+withdrawLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  withdrawModal.style.display = 'flex';
+});
+
+withdrawClose.addEventListener('click', ()=>{
+  withdrawModal.style.display = 'none';
+});
+
+withdrawConfirm.addEventListener('click', ()=>{
+  const method = document.getElementById('payment-method').value;
+  const amount = parseFloat(document.getElementById('withdraw-amount').value);
+  if(!amount || amount <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  alert(`Withdraw ${amount} via ${method} initiated!`);
+  withdrawModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+withdrawModal.addEventListener('click', (e)=>{
+  if(e.target === withdrawModal) withdrawModal.style.display='none';
+});
+
+// Modal logic for Transfer
+const transferLink = document.getElementById('transfer-link');
+const transferModal = document.getElementById('transfer-modal');
+const transferClose = document.getElementById('transfer-close');
+const transferConfirm = document.getElementById('transfer-confirm');
+
+transferLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  transferModal.style.display = 'flex';
+});
+
+transferClose.addEventListener('click', ()=>{
+  transferModal.style.display = 'none';
+});
+
+transferConfirm.addEventListener('click', ()=>{
+  const method = document.getElementById('payment-method').value;
+  const amount = parseFloat(document.getElementById('transfer-amount').value);
+  if(!amount || amount <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  alert(`Transfer ${amount} via ${method} initiated!`);
+  transferModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+transferModal.addEventListener('click', (e)=>{
+  if(e.target === transferModal) transferModal.style.display='none';
+});
+// Modal logic for Convert
+const convertLink = document.getElementById('convert-link');
+const convertModal = document.getElementById('convert-modal');
+const convertClose = document.getElementById('convert-close');
+const convertConfirm = document.getElementById('convert-confirm');
+
+convertLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  convertModal.style.display = 'flex';
+});
+
+convertClose.addEventListener('click', ()=>{
+  convertModal.style.display = 'none';
+});
+
+convertConfirm.addEventListener('click', ()=>{
+  const method = document.getElementById('payment-method').value;
+  const amount = parseFloat(document.getElementById('convert-amount').value);
+  if(!amount || amount <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  alert(`Convert ${amount} via ${method} initiated!`);
+  convertModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+convertModal.addEventListener('click', (e)=>{
+  if(e.target === convertModal) convertModal.style.display='none';
+});
+
 </script>
 </body>
 </html>
