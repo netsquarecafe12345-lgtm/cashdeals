@@ -6,6 +6,7 @@ import {
 
 const db = getFirestore();
 
+
 // LOAD CLIENT DATA INTO ADMIN TABLE
 async function loadClients() {
   const table = document.getElementById("clientTable");
