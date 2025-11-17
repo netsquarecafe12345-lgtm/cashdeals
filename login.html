@@ -26,7 +26,7 @@
         apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
         authDomain: "cashdeals-185df.firebaseapp.com",
         projectId: "cashdeals-185df",
-        storageBucket: "cashdeals-185df.firebasestorage.app",
+        storageBucket: "cashdeals-185df.appspot.com", // Corrected this line
         messagingSenderId: "749879075742",
         appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
     };
@@ -34,13 +34,20 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Login
+    // Login event
     document.getElementById("login-button").addEventListener("click", async () => {
-        const email = document.getElementById("login-email").value;
-        const password = document.getElementById("login-password").value;
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value.trim();
+
+        // Basic validation
+        if (!email || !password) {
+            alert("Please enter both email and password.");
+            return;
+        }
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            // Redirect to admin page upon successful login
             window.location.href = "admin.html";
         } catch (error) {
             alert("Login failed: " + error.message);
