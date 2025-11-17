@@ -1,130 +1,242 @@
-/* ------------------------------
-   GLOBAL
------------------------------- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        /* ------------------------------
+           GLOBAL
+        ------------------------------ */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+        }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
-}
+        h1 { margin-bottom: 10px; }
+        h2 { margin-top: 40px; margin-bottom: 10px; }
 
-/* ------------------------------
-   TOP BAR
------------------------------- */
+        /* ------------------------------
+           TOP BAR
+        ------------------------------ */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #admin-email { font-size: 14px; }
+        #logoutBtn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #ff4444;
+        }
+        #logoutBtn:hover { background: #cc0000; }
 
-.topbar {
-    background: #181818;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #333;
-}
+        /* ------------------------------
+           TABLES
+        ------------------------------ */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
 
-.topbar h1 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: bold;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+            margin-bottom: 40px;
+        }
+        thead { background: #222; }
+        thead th { padding: 12px; text-align: left; border-bottom: 2px solid #444; }
+        tbody td { padding: 10px; border-bottom: 1px solid #333; }
 
-.admin-info {
-    font-size: 14px;
-}
+        /* Buttons */
+        .edit-btn { background: #007bff; }
+        .del-btn { background: #ff4444; }
+        .approve-btn { background: #28a745; }
+        .reject-btn { background: #dc3545; }
 
-#logoutBtn {
-    margin-left: 15px;
-    padding: 8px 14px;
-    border: none;
-    background: #ff4444;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-}
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        button:hover { opacity: 0.85; }
 
-#logoutBtn:hover {
-    background: #cc0000;
-}
+        /* ------------------------------
+           MOBILE
+        ------------------------------ */
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; text-align: center; }
+            table { font-size: 14px; }
+            button { padding: 5px 8px; margin-bottom: 3px; }
+        }
+    </style>
+</head>
+<body>
 
-/* ------------------------------
-   TABLE
------------------------------- */
+<div class="topbar">
+    <h1>Admin Dashboard</h1>
+    <div>
+        <span id="admin-email">Loading...</span>
+        <button id="logoutBtn">Logout</button>
+    </div>
+</div>
 
-.table-container {
-    width: 100%;
-    overflow-x: auto;
-    margin-top: 20px;
-}
+<h2>Clients</h2>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Phone</th>
+                <th>Password</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="clientTable"></tbody>
+    </table>
+</div>
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 900px;
-}
+<h2>Withdrawals</h2>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="withdrawalsTable"></tbody>
+    </table>
+</div>
 
-thead {
-    background: #222;
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-thead th {
-    padding: 15px;
-    text-align: left;
-    font-weight: bold;
-    border-bottom: 2px solid #444;
-}
+// -------------------- FIREBASE CONFIG --------------------
+const firebaseConfig = {
+    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+    authDomain: "cashdeals-185df.firebaseapp.com",
+    projectId: "cashdeals-185df",
+    storageBucket: "cashdeals-185df.appspot.com",
+    messagingSenderId: "749879075742",
+    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
 
-tbody td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #333;
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* ------------------------------
-   BUTTONS
------------------------------- */
-
-.edit-btn {
-    padding: 6px 12px;
-    background: #007bff;
-    border: none;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.edit-btn:hover {
-    background: #0061c9;
-}
-
-.del-btn {
-    padding: 6px 12px;
-    margin-left: 8px;
-    background: #ff4444;
-    border: none;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.del-btn:hover {
-    background: #cc0000;
-}
-
-/* ------------------------------
-   MOBILE
------------------------------- */
-
-@media (max-width: 768px) {
-    .topbar {
-        flex-direction: column;
-        text-align: center;
+// -------------------- AUTH CHECK --------------------
+onAuthStateChanged(auth, user => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
     }
 
-    table {
-        font-size: 14px;
-    }
+    document.getElementById("admin-email").innerText = `Logged in as: ${user.email}`;
+    loadClients();
+    loadWithdrawals();
+});
 
-    .edit-btn, .del-btn {
-        padding: 5px 8px;
-    }
+// -------------------- LOGOUT --------------------
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    signOut(auth).then(() => window.location.href = "login.html");
+});
+
+// -------------------- LOAD CLIENTS --------------------
+async function loadClients() {
+    const table = document.getElementById("clientTable");
+    table.innerHTML = "";
+
+    const snap = await getDocs(collection(db, "clients"));
+    snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        table.innerHTML += `
+            <tr>
+                <td>${data.email}</td>
+                <td>${data.username}</td>
+                <td>${data.phone}</td>
+                <td>••••••••</td>
+                <td>${data.balance}</td>
+                <td>
+                    <button class="edit-btn" onclick="editBalance('${id}', ${data.balance})">Edit</button>
+                    <button class="del-btn" onclick="deleteUser('${id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
 }
+
+// -------------------- EDIT BALANCE --------------------
+window.editBalance = async (id, oldBalance) => {
+    const newBalance = prompt("Enter new balance:", oldBalance);
+    if (newBalance === null) return;
+    await updateDoc(doc(db, "clients", id), { balance: Number(newBalance) });
+    loadClients();
+};
+
+// -------------------- DELETE USER --------------------
+window.deleteUser = async (id) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    await deleteDoc(doc(db, "clients", id));
+    loadClients();
+};
+
+// -------------------- LOAD WITHDRAWALS --------------------
+async function loadWithdrawals() {
+    const table = document.getElementById("withdrawalsTable");
+    table.innerHTML = "";
+
+    const snap = await getDocs(collection(db, "withdrawals"));
+    snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        table.innerHTML += `
+            <tr>
+                <td>${data.username || data.userId}</td>
+                <td>${data.amount}</td>
+                <td>${data.method}</td>
+                <td>${data.status}</td>
+                <td>
+                    <button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button>
+                    <button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// -------------------- APPROVE / REJECT --------------------
+window.approveWithdrawal = async (id) => {
+    await updateDoc(doc(db, "withdrawals", id), { status: "approved" });
+    loadWithdrawals();
+};
+
+window.rejectWithdrawal = async (id) => {
+    await updateDoc(doc(db, "withdrawals", id), { status: "rejected" });
+    loadWithdrawals();
+};
+</script>
+
+</body>
+</html>
