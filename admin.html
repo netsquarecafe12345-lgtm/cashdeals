@@ -1,28 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Dashboard</title>
-</head>
-<body>
-
-<h1>Welcome to Admin Dashboard</h1>
-
-<button id="logout">Logout</button>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { 
-        getAuth, 
-        onAuthStateChanged, 
-        signOut 
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // Correct Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
         authDomain: "cashdeals-185df.firebaseapp.com",
         projectId: "cashdeals-185df",
-        storageBucket: "cashdeals-185df.firebasestorage.app",
+        storageBucket: "cashdeals-185df.appspot.com",  // FIXED
         messagingSenderId: "749879075742",
         appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
     };
@@ -30,20 +14,16 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Redirect to login if NOT logged in
     onAuthStateChanged(auth, (user) => {
+        console.log("Auth state:", user);
         if (!user) {
             window.location.href = "login.html";
         }
     });
 
-    // Logout
-    document.getElementById("logout").addEventListener("click", () => {
+    document.getElementById("logoutBtn").addEventListener("click", () => {
         signOut(auth).then(() => {
             window.location.href = "login.html";
         });
     });
 </script>
-
-</body>
-</html>
