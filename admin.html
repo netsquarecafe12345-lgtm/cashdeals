@@ -1,29 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial; background: #111; color: #fff; margin: 0; padding: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        th, td { padding: 10px; border: 1px solid #333; text-align: left; }
+        th { background: #222; }
+        button { padding: 5px 10px; margin-right: 5px; cursor: pointer; border: none; border-radius: 3px; }
+        .edit-btn { background: #007bff; color: #fff; }
+        .del-btn { background: #ff4444; color: #fff; }
+        .approve-btn { background: #28a745; color: #fff; }
+        .reject-btn { background: #dc3545; color: #fff; }
+        #logoutBtn { background: #555; color: #fff; padding: 8px 15px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>Admin Dashboard</h1>
+<button id="logoutBtn">Logout</button>
+<p id="admin-email"></p>
+
+<h2>Clients</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Phone</th>
+            <th>Password</th>
+            <th>Balance</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="clientTable"></tbody>
+</table>
+
+<h2>Withdrawals</h2>
+<table>
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="withdrawalsTable"></tbody>
+</table>
+
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-        authDomain: "cashdeals-185df.firebaseapp.com",
-        projectId: "cashdeals-185df",
-        storageBucket: "cashdeals-185df.appspot.com",  // FIXED
-        messagingSenderId: "749879075742",
-        appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-    };
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+    authDomain: "cashdeals-185df.firebaseapp.com",
+    projectId: "cashdeals-185df",
+    storageBucket: "cashdeals-185df.appspot.com",
+    messagingSenderId: "749879075742",
+    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    onAuthStateChanged(auth, (user) => {
-        console.log("Auth state:", user);
-        if (!user) {
-            window.location.href = "login.html";
-        }
+// Auth check
+onAuthStateChanged(auth, user => {
+    if (!user) window.location.href = "login.html";
+    else document.getElementById("admin-email").innerText = `Logged in as: ${user.email}`;
+});
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    signOut(auth).then(() => window.location.href = "login.html");
+});
+
+// Load clients
+async function loadClients() {
+    const table = document.getElementById("clientTable");
+    table.innerHTML = "";
+    const snap = await getDocs(collection(db, "clients"));
+    snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+        table.innerHTML += `
+            <tr>
+                <td>${data.email}</td>
+                <td>${data.username}</td>
+                <td>${data.phone}</td>
+                <td>${data.password}</td>
+                <td>${data.balance}</td>
+                <td>
+                    <button class="edit-btn" onclick="editBalance('${id}', ${data.balance})">Edit</button>
+                    <button class="del-btn" onclick="deleteUser('${id}')">Delete</button>
+                </td>
+            </tr>
+        `;
     });
+}
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-        signOut(auth).then(() => {
-            window.location.href = "login.html";
-        });
+// Edit balance
+window.editBalance = async (id, oldBalance) => {
+    const newBalance = prompt("Enter new balance:", oldBalance);
+    if (newBalance === null) return;
+    await updateDoc(doc(db, "clients", id), { balance: Number(newBalance) });
+    loadClients();
+};
+
+// Delete user
+window.deleteUser = async (id) => {
+    if (!confirm("Delete user?")) return;
+    await deleteDoc(doc(db, "clients", id));
+    loadClients();
+};
+
+// Load withdrawals
+async function loadWithdrawals() {
+    const table = document.getElementById("withdrawalsTable");
+    table.innerHTML = "";
+    const snap = await getDocs(collection(db, "withdrawals"));
+    snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+        table.innerHTML += `
+            <tr>
+                <td>${data.username}</td>
+                <td>${data.amount}</td>
+                <td>${data.method}</td>
+                <td>${data.status}</td>
+                <td>
+                    <button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button>
+                    <button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button>
+                </td>
+            </tr>
+        `;
     });
+}
+
+// Approve/Reject
+window.approveWithdrawal = async (id) => {
+    await updateDoc(doc(db, "withdrawals", id), { status: "approved" });
+    loadWithdrawals();
+};
+
+window.rejectWithdrawal = async (id) => {
+    await updateDoc(doc(db, "withdrawals", id), { status: "rejected" });
+    loadWithdrawals();
+};
+
+// Load on page load
+window.onload = () => {
+    loadClients();
+    loadWithdrawals();
+};
 </script>
+
+</body>
+</html>
