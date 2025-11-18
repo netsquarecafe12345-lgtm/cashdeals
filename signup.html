@@ -53,8 +53,14 @@ const db = getFirestore(app);
 document.getElementById("signup-button").addEventListener("click", async () => {
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
-    const username = email.split('@')[0]; // simple default username
-    const phone = ""; // You can add a phone input if you want
+
+    if (!email || !password) {
+        alert("Please fill out both fields.");
+        return;
+    }
+
+    const username = email.split('@')[0]; // Default username based on email (you can customize this)
+    const phone = ""; // Optional field for phone number (can add an input if needed)
 
     try {
         // 1. Create Auth user
@@ -67,12 +73,11 @@ document.getElementById("signup-button").addEventListener("click", async () => {
             email: email,
             username: username,
             phone: phone,
-            password: password, // optional, but in production, do NOT store raw password
-            balance: 0
+            balance: 0 // Default balance
         });
 
         alert("Account created! You can now log in.");
-        window.location.href = "login.html"; // Redirect to login page after sign up
+        window.location.href = "login.html"; // Redirect to login page after successful signup
     } catch (error) {
         alert("Signup failed: " + error.message); // Show error message if something goes wrong
     }
