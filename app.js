@@ -167,3 +167,31 @@ onAuthStateChanged(auth, (user) => {
     loadClients();
   }
 });
+// app.js or your main JS file
+
+// Assuming `authContainer` and `dashboard` are already defined globally
+// and `adminData` is fetched (e.g., from localStorage, an API, etc.)
+function showAdminDashboard(adminData) {
+    // Hide login or user dashboard, show the admin panel
+    authContainer.style.display = 'none';
+    dashboard.style.display = 'flex';
+
+    // Set admin-related data
+    document.getElementById('admin-username').textContent = 'Admin';
+    document.getElementById('total-users').textContent = adminData.totalUsers;
+    document.getElementById('pending-transactions').textContent = adminData.pendingTransactions;
+    
+    // Load user data into the admin panel (e.g., user table)
+    loadUsersTable();  // Load table with user data
+}
+
+// Call this function with admin data when the user is authenticated as an admin
+// For example, you might call this after checking the user's session or login credentials
+const adminData = {
+    totalUsers: 150,        // Example data
+    pendingTransactions: 5
+};
+
+// Call this function to display the admin dashboard
+showAdminDashboard(adminData);
+
