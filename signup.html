@@ -71,13 +71,15 @@ document.getElementById("signup-button").addEventListener("click", async () => {
             balance: 0
         });
 
-        alert("Account created! You can now log in.");
-        window.location.href = "login.html"; // Redirect to login page after sign up
+  // ✅ Redirect user to main site after signup
+        alert("Account created! Redirecting to site...");
+        window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals/";
     } catch (error) {
-        alert("Signup failed: " + error.message); // Show error message if something goes wrong
+        alert("Signup failed: " + error.message);
     }
 });
 </script>
 
 </body>
 </html>
+
