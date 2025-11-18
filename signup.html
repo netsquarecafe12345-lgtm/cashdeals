@@ -1,3 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+</head>
+<body>
+
+<h2>Create Account</h2>
+
+<!-- Email input -->
+<input type="email" id="signup-email" placeholder="Enter your email" required><br><br>
+
+<!-- Password input -->
+<input type="password" id="signup-password" placeholder="Enter your password" required><br><br>
+
+<!-- Signup button -->
+<button id="signup-button">Create Account</button><br><br>
+
+<!-- Link to login page if already have an account -->
+<p>Already have an account? <a href="login.html">Log in</a></p>
+
+<!-- Add the script below, after all elements are loaded -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -48,9 +72,12 @@ document.getElementById("signup-button").addEventListener("click", async () => {
         });
 
         alert("Account created! You can now log in.");
-        window.location.href = "login.html";
+        window.location.href = "login.html"; // Redirect to login page after sign up
     } catch (error) {
-        alert("Signup failed: " + error.message);
+        alert("Signup failed: " + error.message); // Show error message if something goes wrong
     }
 });
 </script>
+
+</body>
+</html>
