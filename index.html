@@ -248,6 +248,26 @@
 </div>
 
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+    authDomain: "cashdeals-185df.firebaseapp.com",
+    projectId: "cashdeals-185df",
+    storageBucket: "cashdeals-185df.appspot.com",
+    messagingSenderId: "749879075742",
+    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// You can put additional code here...
+</script>
+
+ 
 <script>
   // Elements
   const authContainer = document.getElementById('auth-container');
