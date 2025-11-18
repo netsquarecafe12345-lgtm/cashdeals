@@ -306,7 +306,7 @@
       if(users[username]) {
         alert('Username already exists');
       } else {
-        users[username] = { password: password, balance: 150000 };
+        users[username] = { password: password, balance: 0 };
         localStorage.setItem('users', JSON.stringify(users));
         alert('Account created! You can now login.');
         loginMode = true;
