@@ -268,7 +268,7 @@
   // Toggle login/signup UI
   switchAuth.addEventListener('click', () => {
     loginMode = !loginMode;
-    if(loginMode) {
+    if (loginMode) {
       authTitle.textContent = 'Login';
       authButton.textContent = 'Login';
       switchAuth.textContent = "Don't have an account? Sign Up";
@@ -299,7 +299,7 @@
     const users = JSON.parse(localStorage.getItem('users') || '{}');
 
     if (loginMode) {
-      if(users[username] && users[username].password === password) {
+      if (users[username] && users[username].password === password) {
         localStorage.setItem('currentUser', username);
         showDashboard(users[username]);
         authUsername.value = '';
@@ -308,7 +308,7 @@
         alert('Invalid username or password');
       }
     } else {
-      if(users[username]) {
+      if (users[username]) {
         alert('Username already exists');
       } else {
         users[username] = { password: password, balance: 0 };
@@ -328,7 +328,7 @@
   });
 
   // Show Dashboard
-  function showDashboard(userData){
+  function showDashboard(userData) {
     authContainer.style.display = 'none';
     dashboard.style.display = 'flex';
     usernameDisplay.textContent = localStorage.getItem('currentUser');
@@ -360,7 +360,7 @@
     {name:"Aster",symbol:"ASTER",price:1000,change:1.8,market:450000000,spark:[990,995,1000,1010,1005],color:"#00A3FF"}
   ];
 
-  function drawSparkline(canvas, prices, positive=true){
+  function drawSparkline(canvas, prices, positive=true) {
     canvas.width=100; canvas.height=40;
     const ctx=canvas.getContext('2d');
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -376,7 +376,7 @@
     ctx.lineWidth=2; ctx.stroke();
   }
 
-  function loadTable(){
+  function loadTable() {
     const tbody=document.querySelector("#coins-table tbody");
     tbody.innerHTML='';
     coinsData.forEach((coin,i)=>{
@@ -446,253 +446,161 @@
   const profileClose = document.getElementById('profile-close');
   const profileForm = document.getElementById('profile-form');
 
-  profileIcon.addEventListener('click', () => {
+  // Helper function to get current user data
+  function getCurrentUserData() {
+    const username = localStorage.getItem('currentUser');
+    if (!username) return null;
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    return users[username] || null;
+  }
+
+  // Show profile modal with preset data
+  function showProfileModal() {
+    const userData = getCurrentUserData();
+    if (!userData) return;
+
+    document.getElementById('email').value = userData.email || '';
+    document.getElementById('phone').value = userData.phone || '';
+    document.getElementById('balance').value = userData.balance !== undefined ? userData.balance : 0;
+
     profileModal.style.display = 'flex';
-  });
+  }
 
-  profileClose.addEventListener('click', () => {
-    profileModal.style.display = 'none';
-  });
+  // Attach to profile icon click
+  profileIcon.addEventListener('click', showProfileModal);
 
-  window.addEventListener('click', (e) => {
-    if (e.target === profileModal) {	
+  // Save profile updates
+  document.getElementById('profile-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const balance = parseFloat(document.getElementById('balance').value);
+
+    if (!email) {
+      alert('Please enter a valid email.');
+      return;
+    }
+
+    const username = localStorage.getItem('currentUser');
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+
+    if (users[username]) {
+      users[username].email = email;
+      users[username].phone = phone;
+      users[username].balance = balance; // Save new balance
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('Profile updated!');
+
+      // Update balance display in dashboard
+      document.getElementById('balance').textContent = balance.toLocaleString();
+
+      // Close modal
       profileModal.style.display = 'none';
     }
   });
 
-  profileForm.addEventListener('submit', (e) => {
+  // Modal close handlers
+  document.getElementById('profile-close').addEventListener('click', () => {
+    profileModal.style.display = 'none';
+  });
+  window.addEventListener('click', (e) => {
+    if (e.target === profileModal) {
+      profileModal.style.display = 'none';
+    }
+  });
+
+  // Modal logic for Withdraw
+  const withdrawLink = document.getElementById('withdraw-link');
+  const withdrawModal = document.getElementById('withdraw-modal');
+  const withdrawClose = document.getElementById('withdraw-close');
+  const withdrawConfirm = document.getElementById('withdraw-confirm');
+
+  withdrawLink.addEventListener('click', (e)=>{
     e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    if(!email) {
-      alert('Please enter a valid email.');
+    withdrawModal.style.display = 'flex';
+  });
+
+  withdrawClose.addEventListener('click', ()=>{
+    withdrawModal.style.display = 'none';
+  });
+
+  withdrawConfirm.addEventListener('click', ()=>{
+    const method = document.getElementById('payment-method').value;
+    const amount = parseFloat(document.getElementById('withdraw-amount').value);
+    if(!amount || amount <= 0){
+      alert("Enter a valid amount");
       return;
     }
-    alert(`Profile saved:\nEmail: ${email}\nPhone: ${phone}`);
-    profileModal.style.display = 'none';
-    // Optionally, add persistent profile saving here
+    alert(`Withdraw ${amount} via ${method} initiated!`);
+    withdrawModal.style.display = 'none';
   });
- // Modal logic for Withdraw
-const withdrawLink = document.getElementById('withdraw-link');
-const withdrawModal = document.getElementById('withdraw-modal');
-const withdrawClose = document.getElementById('withdraw-close');
-const withdrawConfirm = document.getElementById('withdraw-confirm');
 
-withdrawLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  withdrawModal.style.display = 'flex';
-});
+  // Close modal when clicking outside
+  withdrawModal.addEventListener('click', (e)=>{
+    if(e.target === withdrawModal) withdrawModal.style.display='none';
+  });
 
-withdrawClose.addEventListener('click', ()=>{
-  withdrawModal.style.display = 'none';
-});
+  // Modal logic for Transfer
+  const transferLink = document.getElementById('transfer-link');
+  const transferModal = document.getElementById('transfer-modal');
+  const transferClose = document.getElementById('transfer-close');
+  const transferConfirm = document.getElementById('transfer-confirm');
 
-withdrawConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('withdraw-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Withdraw ${amount} via ${method} initiated!`);
-  withdrawModal.style.display = 'none';
-});
+  transferLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    transferModal.style.display = 'flex';
+  });
 
-// Close modal when clicking outside
-withdrawModal.addEventListener('click', (e)=>{
-  if(e.target === withdrawModal) withdrawModal.style.display='none';
-});
+  transferClose.addEventListener('click', ()=>{
+    transferModal.style.display = 'none';
+  });
 
-// Modal logic for Transfer
-const transferLink = document.getElementById('transfer-link');
-const transferModal = document.getElementById('transfer-modal');
-const transferClose = document.getElementById('transfer-close');
-const transferConfirm = document.getElementById('transfer-confirm');
-
-transferLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  transferModal.style.display = 'flex';
-});
-
-transferClose.addEventListener('click', ()=>{
-  transferModal.style.display = 'none';
-});
-
-transferConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('transfer-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Transfer ${amount} via ${method} initiated!`);
-  transferModal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-transferModal.addEventListener('click', (e)=>{
-  if(e.target === transferModal) transferModal.style.display='none';
-});
-// Modal logic for Convert
-const convertLink = document.getElementById('convert-link');
-const convertModal = document.getElementById('convert-modal');
-const convertClose = document.getElementById('convert-close');
-const convertConfirm = document.getElementById('convert-confirm');
-
-convertLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  convertModal.style.display = 'flex';
-});
-
-convertClose.addEventListener('click', ()=>{
-  convertModal.style.display = 'none';
-});
-
-convertConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('convert-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Convert ${amount} via ${method} initiated!`);
-  convertModal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-convertModal.addEventListener('click', (e)=>{
-  if(e.target === convertModal) convertModal.style.display='none';
-});
-
-
-</script>
- <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-// Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-    authDomain: "cashdeals-185df.firebaseapp.com",
-    projectId: "cashdeals-185df",
-    storageBucket: "cashdeals-185df.appspot.com",
-    messagingSenderId: "749879075742",
-    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Auth check
-onAuthStateChanged(auth, user => {
-    if (!user) window.location.href = "login.html";
-    else document.getElementById("admin-email").innerText = `Logged in as: ${user.email}`;
-});
-
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => window.location.href = "login.html");
-});
-
-// Load clients
-async function loadClients() {
-    const table = document.getElementById("clientTable");
-    table.innerHTML = "";
-    const snap = await getDocs(collection(db, "clients"));
-    snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const id = docSnap.id;
-        table.innerHTML += `
-            <tr>
-                <td>${data.email}</td>
-                <td>${data.username}</td>
-                <td>${data.phone}</td>
-                <td>${data.password}</td>
-                <td contenteditable="true" onblur="updateBalance('${id}', this)">${data.balance}</td>
-                <td>
-                    <button class="edit-btn" onclick="editBalance('${id}', ${data.balance})">Edit</button>
-                    <button class="del-btn" onclick="deleteUser('${id}')">Delete</button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-// Update balance after inline edit
-window.updateBalance = async (id, cell) => {
-    const newBalanceStr = cell.innerText.trim();
-    const newBalance = Number(newBalanceStr.replace(/[^0-9.-]+/g,"")); // Remove non-numeric characters
-    if (isNaN(newBalance)) {
-        alert("Please enter a valid number");
-        loadClients(); // Revert to original data
-        return;
+  transferConfirm.addEventListener('click', ()=>{
+    const method = document.getElementById('payment-method').value;
+    const amount = parseFloat(document.getElementById('transfer-amount').value);
+    if(!amount || amount <= 0){
+      alert("Enter a valid amount");
+      return;
     }
-    await updateDoc(doc(db, "clients", id), { balance: newBalance });
-    loadClients(); // Refresh the table
-};
+    alert(`Transfer ${amount} via ${method} initiated!`);
+    transferModal.style.display = 'none';
+  });
 
-// Edit balance via prompt (optional)
-window.editBalance = async (id, oldBalance) => {
-    const newBalance = prompt("Enter new balance:", oldBalance);
-    if (newBalance === null) return;
-    const balanceNumber = Number(newBalance);
-    if (isNaN(balanceNumber)) {
-        alert("Invalid number");
-        return;
+  // Close modal when clicking outside
+  transferModal.addEventListener('click', (e)=>{
+    if(e.target === transferModal) transferModal.style.display='none';
+  });
+
+  // Modal logic for Convert
+  const convertLink = document.getElementById('convert-link');
+  const convertModal = document.getElementById('convert-modal');
+  const convertClose = document.getElementById('convert-close');
+  const convertConfirm = document.getElementById('convert-confirm');
+
+  convertLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    convertModal.style.display = 'flex';
+  });
+
+  convertClose.addEventListener('click', ()=>{
+    convertModal.style.display = 'none';
+  });
+
+  convertConfirm.addEventListener('click', ()=>{
+    const method = document.getElementById('payment-method').value;
+    const amount = parseFloat(document.getElementById('convert-amount').value);
+    if(!amount || amount <= 0){
+      alert("Enter a valid amount");
+      return;
     }
-    await updateDoc(doc(db, "clients", id), { balance: balanceNumber });
-    loadClients();
-};
+    alert(`Convert ${amount} via ${method} initiated!`);
+    convertModal.style.display = 'none';
+  });
 
-// Delete user
-window.deleteUser = async (id) => {
-    if (!confirm("Delete user?")) return;
-    await deleteDoc(doc(db, "clients", id));
-    loadClients();
-};
-
-// Load withdrawals
-async function loadWithdrawals() {
-    const table = document.getElementById("withdrawalsTable");
-    table.innerHTML = "";
-    const snap = await getDocs(collection(db, "withdrawals"));
-    snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const id = docSnap.id;
-        table.innerHTML += `
-            <tr>
-                <td>${data.username}</td>
-                <td>${data.amount}</td>
-                <td>${data.method}</td>
-                <td>${data.status}</td>
-                <td>
-                    <button class="approve-btn" onclick="approveWithdrawal('${id}')">Approve</button>
-                    <button class="reject-btn" onclick="rejectWithdrawal('${id}')">Reject</button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-// Approve withdrawal
-window.approveWithdrawal = async (id) => {
-    await updateDoc(doc(db, "withdrawals", id), { status: "approved" });
-    loadWithdrawals();
-};
-
-// Reject withdrawal
-window.rejectWithdrawal = async (id) => {
-    await updateDoc(doc(db, "withdrawals", id), { status: "rejected" });
-    loadWithdrawals();
-};
-
-// Load data on page load
-window.onload = () => {
-    loadClients();
-    loadWithdrawals();
-};
+  // Close modal when clicking outside
+  convertModal.addEventListener('click', (e)=>{
+    if(e.target === convertModal) convertModal.style.display='none';
+  });
 </script>
 </body>
 </html>
