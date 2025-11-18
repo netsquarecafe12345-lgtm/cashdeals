@@ -142,20 +142,16 @@
     <a href="#">Trade</a>
   </div>
   <div class="main">
-   <header>
-  <span>Welcome, <strong id="username"></strong> | Balance: 
-    <span id="balance-display"></span>
-    <input type="text" id="balance-input" style="display: none; width: 100px; padding: 5px;" />
-  </span>
-  <div class="header-right">
-    <div class="profile-container" id="profile-icon">
-      <img src="https://www.w3schools.com/w3images/avatar2.png" alt="Profile Icon" />
-      <span>Profile</span>
-    </div>
-    <button id="logout">Logout</button>
-  </div>
-</header>
-
+ <header>
+      <span>Welcome, <strong id="username"></strong> | Balance: $<span id="balance"></span></span>
+      <div class="header-right">
+        <div class="profile-container" id="profile-icon">
+          <img src="https://www.w3schools.com/w3images/avatar2.png" alt="Profile Icon" />
+          <span>Profile</span>
+        </div>
+        <button id="logout">Logout</button>
+      </div>
+    </header>
     <div class="container">
       <table id="coins-table">
         <thead>
