@@ -266,6 +266,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+ // Automatically detect logged-in user
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is signed in, show main content
+        console.log("User is logged in:", user.email);
+        // You can redirect if needed, or show dashboard content
+        // window.location.href = "dashboard.html"; // optional
+    } else {
+        // No user signed in, redirect to login page
+        console.log("No user detected. Redirecting to login...");
+        window.location.href = "login.html";
+    }
+});
 
 // You can put additional code here...
 </script>
