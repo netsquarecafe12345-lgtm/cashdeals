@@ -144,69 +144,22 @@ async function loadWithdrawals() {
     });
 }
 
-// Approve Withdrawal with Auto Balance Deduction
+// Approve/Reject
 window.approveWithdrawal = async (id) => {
-    try {
-        const withdrawalRef = doc(db, "withdrawals", id);
-        const withdrawalSnap = await getDoc(withdrawalRef);
-        const withdrawal = withdrawalSnap.data();
-
-        // Prevent approving twice
-        if (withdrawal.status === "approved") {
-            alert("This withdrawal is already approved.");
-            return;
-        }
-
-        // Fetch user data
-        const userRef = doc(db, "clients", withdrawal.userId);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-            alert("Client not found.");
-            return;
-        }
-
-        const user = userSnap.data();
-        const currentBalance = Number(user.balance);
-        const withdrawalAmount = Number(withdrawal.amount);
-
-        // Check for sufficient balance
-        if (currentBalance < withdrawalAmount) {
-            alert("Insufficient balance. Cannot approve withdrawal.");
-            return;
-        }
-
-        // Deduct balance
-        const newBalance = currentBalance - withdrawalAmount;
-
-        // Update user balance
-        await updateDoc(userRef, { balance: newBalance });
-
-        // Update withdrawal status
-        await updateDoc(withdrawalRef, { status: "approved" });
-
-        alert("Withdrawal approved and balance updated.");
-        loadWithdrawals();
-        loadClients();
-
-    } catch (error) {
-        console.error("Error approving withdrawal:", error);
-        alert("Failed to approve withdrawal.");
-    }
+    await updateDoc(doc(db, "withdrawals", id), { status: "approved" });
+    loadWithdrawals();
 };
 
-// Reject Withdrawal
 window.rejectWithdrawal = async (id) => {
-    try {
-        await updateDoc(doc(db, "withdrawals", id), { status: "rejected" });
-        alert("Withdrawal rejected.");
-        loadWithdrawals();
-    } catch (err) {
-        console.error("Error rejecting withdrawal:", err);
-        alert("Failed to reject withdrawal.");
-    }
+    await updateDoc(doc(db, "withdrawals", id), { status: "rejected" });
+    loadWithdrawals();
 };
 
+// Load on page load
+window.onload = () => {
+    loadClients();
+    loadWithdrawals();
+};
 </script>
 
 </body>
