@@ -47,14 +47,17 @@ document.getElementById("login-button").addEventListener("click", async () => {
         // 1. Sign in the user
         await signInWithEmailAndPassword(auth, email, password);
 
-        // Redirect to the main page after successful login
-        window.location.href = "index.html";
+         // ✅ User is now logged in, redirect to main site
+        alert("Account created! Redirecting to CashDeals site...");
+        window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals/";
+
     } catch (error) {
-        alert("Login failed: " + error.message); // Show error if login fails
+        alert("Signup failed: " + error.message);
     }
 });
 </script>
 
 </body>
 </html>
+
 
