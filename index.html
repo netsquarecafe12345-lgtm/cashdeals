@@ -266,17 +266,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
- // Automatically detect logged-in user
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // User is signed in, show main content
-        console.log("User is logged in:", user.email);
-        // You can redirect if needed, or show dashboard content
-        // window.location.href = "dashboard.html"; // optional
-    } else {
-        // No user signed in, redirect to login page
-        console.log("No user detected. Redirecting to login...");
+
+// Check if the user is authenticated when the page loads
+onAuthStateChanged(auth, user => {
+    if (!user) {
+        // If no user is logged in, redirect to the login page
         window.location.href = "login.html";
+    } else {
+        console.log("User is logged in: " + user.email);
+        // Allow the user to see the main content
     }
 });
 
