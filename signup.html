@@ -18,24 +18,15 @@
 <!-- Signup button -->
 <button id="signup-button">Create Account</button><br><br>
 
-<!-- Link to login page if already have an account -->
+<!-- Link to login page -->
 <p>Already have an account? <a href="login.html">Log in</a></p>
 
-<!-- Add the script below, after all elements are loaded -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-import { 
-    getFirestore, 
-    collection, 
-    addDoc 
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-// Firebase config
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
     authDomain: "cashdeals-185df.firebaseapp.com",
@@ -51,38 +42,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 document.getElementById("signup-button").addEventListener("click", async () => {
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
-
-    if (!email || !password) {
-        alert("Please fill out both fields.");
-        return;
-    }
-
-    const username = email.split('@')[0]; // Default username based on email (you can customize this)
-    const phone = ""; // Optional field for phone number (can add an input if needed)
-
-    try {
-        // 1. Create Auth user
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // 2. Save user info in Firestore (clients collection)
-        await addDoc(collection(db, "clients"), {
-            uid: user.uid,
-            email: email,
-            username: username,
-            phone: phone,
-            balance: 0 // Default balance
-        });
-
-        alert("Account created! You can now log in.");
-        window.location.href = "login.html"; // Redirect to login page after successful signup
-    } catch (error) {
-        alert("Signup failed: " + error.message); // Show error message if something goes wrong
-    }
-});
-</script>
-
-</body>
-</html>
+    const email = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value.trim();
+    const username = email.split('@')[0]; // default username from email
+    const phone = ""; // optional, you c
