@@ -1,104 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up</title>
-</head>
-<body>
-
-<h2>Create Account</h2>
-
-<input type="email" id="signup-email" placeholder="Email"><br><br>
-<input type="password" id="signup-password" placeholder="Password"><br><br>
-
-<button id="signup-button">Create Account</button>
-
-<p>Already have an account? <a href="login.html">Log in</a></p>
-
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { 
-        getAuth, 
-        createUserWithEmailAndPassword 
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword 
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // SAME CONFIG as login.html and admin.html
-    const firebaseConfig = {
-        apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-        authDomain: "cashdeals-185df.firebaseapp.com",
-        projectId: "cashdeals-185df",
-        storageBucket: "cashdeals-185df.firebasestorage.app",
-        messagingSenderId: "749879075742",
-        appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-    };
+import { 
+    getFirestore, 
+    collection, 
+    addDoc 
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+    authDomain: "cashdeals-185df.firebaseapp.com",
+    projectId: "cashdeals-185df",
+    storageBucket: "cashdeals-185df.appspot.com",
+    messagingSenderId: "749879075742",
+    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
 
-    document.getElementById("signup-button").addEventListener("click", async () => {
-        const email = document.getElementById("signup-email").value;
-        const password = document.getElementById("signup-password").value;
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert("Account created! You can now log in.");
-            window.location.href = "login.html";
-        } catch (error) {
-            alert("Signup failed: " + error.message);
-        }
-    });
+document.getElementById("signup-button").addEventListener("click", async () => {
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const username = email.split('@')[0]; // simple default username
+    const phone = ""; // You can add a phone input if you want
+
+    try {
+        // 1. Create Auth user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 2. Save user info in Firestore (clients collection)
+        await addDoc(collection(db, "clients"), {
+            uid: user.uid,
+            email: email,
+            username: username,
+            phone: phone,
+            password: password, // optional, but in production, do NOT store raw password
+            balance: 0
+        });
+
+        alert("Account created! You can now log in.");
+        window.location.href = "login.html";
+    } catch (error) {
+        alert("Signup failed: " + error.message);
+    }
+});
 </script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up</title>
-</head>
-<body>
-
-<h2>Create Account</h2>
-
-<input type="email" id="signup-email" placeholder="Email"><br><br>
-<input type="password" id="signup-password" placeholder="Password"><br><br>
-
-<button id="signup-button">Create Account</button>
-
-<p>Already have an account? <a href="login.html">Log in</a></p>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { 
-        getAuth, 
-        createUserWithEmailAndPassword 
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
-    // SAME CONFIG as login.html and admin.html
-    const firebaseConfig = {
-        apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-        authDomain: "cashdeals-185df.firebaseapp.com",
-        projectId: "cashdeals-185df",
-        storageBucket: "cashdeals-185df.firebasestorage.app",
-        messagingSenderId: "749879075742",
-        appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    document.getElementById("signup-button").addEventListener("click", async () => {
-        const email = document.getElementById("signup-email").value;
-        const password = document.getElementById("signup-password").value;
-
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert("Account created! You can now log in.");
-            window.location.href = "login.html";
-        } catch (error) {
-            alert("Signup failed: " + error.message);
-        }
-    });
-</script>
-
-</body>
-</html>
