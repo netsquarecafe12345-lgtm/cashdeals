@@ -601,6 +601,63 @@
   convertModal.addEventListener('click', (e)=>{
     if(e.target === convertModal) convertModal.style.display='none';
   });
+ // Profile Modal Logic
+const profileModal = document.getElementById('profile-modal');
+const profileCloseBtn = document.getElementById('profile-close');
+
+// Show profile modal
+function showProfileModal() {
+  const userData = getCurrentUserData();
+  if (!userData) return;
+
+  document.getElementById('email').value = userData.email || '';
+  document.getElementById('phone').value = userData.phone || '';
+  document.getElementById('balance').value = userData.balance !== undefined ? userData.balance : 0;
+
+  profileModal.style.display = 'flex';
+}
+
+// Close modal
+profileCloseBtn.addEventListener('click', () => {
+  profileModal.style.display = 'none';
+});
+
+// Hide modal when clicking outside the modal content
+window.addEventListener('click', (e) => {
+  if (e.target === profileModal) {
+    profileModal.style.display = 'none';
+  }
+});
+
+// Save profile data
+document.getElementById('profile-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const balance = parseFloat(document.getElementById('balance').value);
+
+  if (!email) {
+    alert('Please enter a valid email.');
+    return;
+  }
+
+  const username = localStorage.getItem('currentUser');
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+
+  if (users[username]) {
+    users[username].email = email;
+    users[username].phone = phone;
+    users[username].balance = balance; // Save new balance
+    localStorage.setItem('users', JSON.stringify(users));
+    alert('Profile updated!');
+
+    // Update balance display in dashboard
+    document.getElementById('balance').textContent = balance.toLocaleString();
+
+    // Close modal
+    profileModal.style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
