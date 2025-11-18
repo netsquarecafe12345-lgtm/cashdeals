@@ -46,9 +46,8 @@
         }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            // Redirect to admin page upon successful login
-            window.location.href = "admin.html";
+            alert("Account created! Redirecting to site...");
+        window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals/";
         } catch (error) {
             alert("Login failed: " + error.message);
         }
@@ -57,4 +56,5 @@
 
 </body>
 </html>
+
 
