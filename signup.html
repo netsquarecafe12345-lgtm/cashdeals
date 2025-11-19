@@ -1,74 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Sign up — CashDeal</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: Arial, sans-serif; background:#f5f6fa; display:flex; align-items:center; justify-content:center; height:100vh; }
-    .box { background:white; padding:24px; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.06); width:360px; }
-    input { width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:6px; }
-    button { width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:6px; cursor:pointer; }
-    .muted { color:#666; font-size:13px; margin-top:10px; }
-    a { color:#1e90ff; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
 </head>
 <body>
-  <div class="box">
-    <h2>Create account</h2>
-    <input id="email" placeholder="Email" type="email" autocomplete="username" />
-    <input id="password" placeholder="Password" type="password" autocomplete="new-password" />
-    <button id="btn-signup">Create account</button>
-    <div class="muted">Already have an account? <a href="login.html">Login</a></div>
-  </div>
 
-  <script type="module">
-    import { auth, db } from './firebase-init';
-    import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
-    import { setDoc, doc, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
+<h2>Create Account</h2>
 
-    const emailEl = document.getElementById('email');
-    const passEl = document.getElementById('password');
-    const btn = document.getElementById('btn-signup');
+<!-- Email input -->
+<input type="email" id="signup-email" placeholder="Enter your email" required><br><br>
 
-    btn.addEventListener('click', async () => {
-      const email = emailEl.value.trim();
-      const password = passEl.value;
-      if (!email || !password) return alert('Enter email + password');
+<!-- Password input -->
+<input type="password" id="signup-password" placeholder="Enter your password" required><br><br>
 
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        const user = cred.user;
+<!-- Signup button -->
+<button id="signup-button">Create Account</button><br><br>
 
-        // create user doc with default role and balance
-        try {
-          await setDoc(doc(db, 'users', user.uid), {
-            email: user.email,
-            balance: 150000,
-            role: 'user',
-            createdAt: serverTimestamp()
-          });
+<!-- Link to login page if already have an account -->
+<p>Already have an account? <a href="login.html">Log in</a></p>
 
-          await addDoc(collection(db, 'auth_logs'), {
+<!-- Add the script below, after all elements are loaded -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword 
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+import { 
+    getFirestore, 
+    collection, 
+    addDoc 
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+    authDomain: "cashdeals-185df.firebaseapp.com",
+    projectId: "cashdeals-185df",
+    storageBucket: "cashdeals-185df.appspot.com",
+    messagingSenderId: "749879075742",
+    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+document.getElementById("signup-button").addEventListener("click", async () => {
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const username = email.split('@')[0]; // simple default username
+    const phone = ""; // You can add a phone input if you want
+
+    try {
+        // 1. Create Auth user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 2. Save user info in Firestore (clients collection)
+        await addDoc(collection(db, "clients"), {
             uid: user.uid,
-            email: user.email,
-            action: 'signup',
-            userAgent: navigator.userAgent,
-            ts: serverTimestamp()
-          });
-        } catch (fireErr) {
-          console.warn('Could not create user doc or auth log:', fireErr);
-        }
+            email: email,
+            username: username,
+            phone: phone,
+            password: password, // optional, but in production, do NOT store raw password
+            balance: 0
+        });
 
-        alert('Account created — redirecting to dashboard...');
-        window.location.href = 'dashboard.html';
-      } catch (err) {
-        console.error(err);
-        alert('Signup failed: ' + (err.message || err));
-      }
-    });
-  </script>
+        alert("Account created! You can now log in.");
+        window.location.href = "login.html"; // Redirect to login page after sign up
+    } catch (error) {
+        alert("Signup failed: " + error.message); // Show error message if something goes wrong
+    }
+});
+</script>
+
 </body>
 </html>
-
-
