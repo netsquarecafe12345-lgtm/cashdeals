@@ -1,70 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <title>Login — CashDeal</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: Arial, sans-serif; background:#f5f6fa; display:flex; align-items:center; justify-content:center; height:100vh; }
-    .box { background:white; padding:24px; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.06); width:360px; }
-    input { width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:6px; }
-    button { width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:6px; cursor:pointer; }
-    .muted { color:#666; font-size:13px; margin-top:10px; }
-    a { color:#1e90ff; }
-  </style>
+    <title>Login</title>
 </head>
 <body>
-  <div class="box">
-    <h2>Login</h2>
-    <input id="email" placeholder="Email" type="email" autocomplete="username" />
-    <input id="password" placeholder="Password" type="password" autocomplete="current-password" />
-    <button id="btn-login">Login</button>
-    <div class="muted">Don't have an account? <a href="signup.html">Sign up</a></div>
-  </div>
+
+<h2>Login</h2>
+
+<input type="email" id="login-email" placeholder="Email"><br><br>
+<input type="password" id="login-password" placeholder="Password"><br><br>
+
+<button id="login-button">Login</button>
+
+<p>Don't have an account? <a href="signup.html">Sign up</a></p>
 
 <script type="module">
-  // login.html — module script (example)
-  import { auth, db } from './firebase-init.js';                 // <-- path must be correct
-  import { signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword 
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-  console.log('auth, db', auth, db); // confirm they're defined
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+        authDomain: "cashdeals-185df.firebaseapp.com",
+        projectId: "cashdeals-185df",
+        storageBucket: "cashdeals-185df.appspot.com", // Corrected this line
+        messagingSenderId: "749879075742",
+        appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+    };
 
-  const emailEl = document.getElementById('email');
-  const passEl = document.getElementById('password');
-  const btn = document.getElementById('btn-login');
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-  btn.addEventListener('click', async () => {
-    const email = emailEl.value.trim();
-    const password = passEl.value;
-    if (!email || !password) return alert('Enter email + password');
+    // Login event
+    document.getElementById("login-button").addEventListener("click", async () => {
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value.trim();
 
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+        // Basic validation
+        if (!email || !password) {
+            alert("Please enter both email and password.");
+            return;
+        }
 
-      // now db should be a proper Firestore instance — write log
-      try {
-        await addDoc(collection(db, 'auth_logs'), {
-          uid: cred.user.uid,
-          email: cred.user.email,
-          action: 'login',
-          userAgent: navigator.userAgent,
-          ts: serverTimestamp()
-        });
-      } catch (logErr) {
-        console.warn('Could not write auth log:', logErr);
-      }
-
-      // redirect as needed
-      window.location.href = 'dashboard.html';
-    } catch (err) {
-      console.error('signIn error', err);
-      alert('Login failed: ' + (err.message || err));
-    }
-  });
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // Redirect to admin page upon successful login
+            window.location.href = "admin.html";
+        } catch (error) {
+            alert("Login failed: " + error.message);
+        }
+    });
 </script>
+
 </body>
 </html>
-
-
-
