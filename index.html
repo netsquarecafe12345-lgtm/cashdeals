@@ -654,7 +654,11 @@
   // Close modal when clicking outside
   convertModal.addEventListener('click', (e)=>{
     if(e.target === convertModal) convertModal.style.display='none';
-  });
+   });
+ document.addEventListener('DOMContentLoaded', () => {
+  loadTable();
+});
+  
  
 </script>
 </body>
