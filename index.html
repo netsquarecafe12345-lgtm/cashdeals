@@ -252,37 +252,26 @@
 
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+  // Firebase v12 SDK imports
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-const firebaseConfig = {
+  // Firebase configuration
+  const firebaseConfig = {
     apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
     authDomain: "cashdeals-185df.firebaseapp.com",
     projectId: "cashdeals-185df",
     storageBucket: "cashdeals-185df.appspot.com",
     messagingSenderId: "749879075742",
     appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-// Check if the user is authenticated when the page loads
-onAuthStateChanged(auth, user => {
-    if (!user) {
-        // If no user is logged in, redirect to the login page
-        window.location.href = "login.html";
-    } else {
-        console.log("User is logged in: " + user.email);
-        // Allow the user to see the main content
-    }
-});
-
-// You can put additional code here...
-</script>
-
- 
-<script>
   // Elements
   const authContainer = document.getElementById('auth-container');
   const dashboard = document.getElementById('dashboard');
@@ -297,8 +286,17 @@ onAuthStateChanged(auth, user => {
 
   let loginMode = true;
 
-  // Initialize users storage if none
-  if (!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify({}));
+  // Check if the user is authenticated when the page loads
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // If the user is authenticated, show the dashboard
+      showDashboard(user);
+    } else {
+      // If the user is not authenticated, show the login form
+      authContainer.style.display = 'flex';
+      dashboard.style.display = 'none';
+    }
+  });
 
   // Toggle login/signup UI
   switchAuth.addEventListener('click', () => {
@@ -331,36 +329,75 @@ onAuthStateChanged(auth, user => {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-
     if (loginMode) {
-      if (users[username] && users[username].password === password) {
-        localStorage.setItem('currentUser', username);
-        showDashboard(users[username]);
-        authUsername.value = '';
-        authPassword.value = '';
-      } else {
-        alert('Invalid username or password');
-      }
+      // Login with Firebase
+      signInWithEmailAndPassword(auth, username, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log("User logged in:", user);
+          showDashboard(user);
+        })
+        .catch((error) => {
+          alert('Invalid username or password');
+          console.error('Login error:', error);
+        });
     } else {
-      if (users[username]) {
-        alert('Username already exists');
-      } else {
-        users[username] = { password: password, balance: 0 };
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('Account created! You can now login.');
-        loginMode = true;
-        authTitle.textContent = 'Login';
-        authButton.textContent = 'Login';
-        switchAuth.textContent = "Don't have an account? Sign Up";
-        authPassword.placeholder = 'Password';
-        authPassword.autocomplete = 'current-password';
-        authUsername.value = '';
-        authPassword.value = '';
-        authUsername.focus();
-      }
+      // Sign Up with Firebase
+      createUserWithEmailAndPassword(auth, username, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log("User signed up:", user);
+          alert('Account created! You can now login.');
+          loginMode = true;
+          authTitle.textContent = 'Login';
+          authButton.textContent = 'Login';
+          switchAuth.textContent = "Don't have an account? Sign Up";
+          authPassword.placeholder = 'Password';
+          authPassword.autocomplete = 'current-password';
+          authUsername.value = '';
+          authPassword.value = '';
+        })
+        .catch((error) => {
+          alert('Error creating account: ' + error.message);
+          console.error('Signup error:', error);
+        });
     }
   });
+
+  // Show Dashboard
+  function showDashboard(user) {
+    authContainer.style.display = 'none';
+    dashboard.style.display = 'flex';
+    usernameDisplay.textContent = user.email;
+    
+    // Fetch additional user data (optional, e.g., balance) from Firestore
+    const userRef = doc(db, "users", user.uid);
+    getDoc(userRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        balanceDisplay.textContent = userData.balance ? userData.balance.toLocaleString() : "0";
+      } else {
+        console.log("No such document for user!");
+      }
+    }).catch((error) => {
+      console.error("Error fetching user data:", error);
+    });
+  }
+
+  // Logout handler
+  logoutBtn.addEventListener('click', () => {
+    auth.signOut().then(() => {
+      authContainer.style.display = 'flex';
+      dashboard.style.display = 'none';
+      authUsername.value = '';
+      authPassword.value = '';
+      authUsername.focus();
+    }).catch((error) => {
+      console.error('Error signing out:', error);
+    });
+  });
+</script>
+
 
   // Show Dashboard
   function showDashboard(userData) {
