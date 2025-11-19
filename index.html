@@ -392,7 +392,9 @@ logoutBtn.addEventListener('click', () => {
 });
  
  // Monitor authentication state to handle session
-firebase.auth().onAuthStateChanged((user) => {
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
+
+onAuthStateChanged(auth, (user) => {
   if (user) {
     showDashboard(user);
   } else {
