@@ -22,48 +22,48 @@
     <div class="muted">Don't have an account? <a href="signup.html">Sign up</a></div>
   </div>
 
-  <script type="module">
-    import { auth, db } from './app.js';
-    import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
-    import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
+<script type="module">
+  // login.html — module script (example)
+  import { auth, db } from './app.js';                 // <-- path must be correct
+  import { signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    const emailEl = document.getElementById('email');
-    const passEl = document.getElementById('password');
-    const btn = document.getElementById('btn-login');
+  console.log('auth, db', auth, db); // confirm they're defined
 
-    btn.addEventListener('click', async () => {
-      const email = emailEl.value.trim();
-      const password = passEl.value;
-      if (!email || !password) return alert('Enter email + password');
+  const emailEl = document.getElementById('email');
+  const passEl = document.getElementById('password');
+  const btn = document.getElementById('btn-login');
 
+  btn.addEventListener('click', async () => {
+    const email = emailEl.value.trim();
+    const password = passEl.value;
+    if (!email || !password) return alert('Enter email + password');
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      // now db should be a proper Firestore instance — write log
       try {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        const user = cred.user;
-
-        // Log login event for admin visibility
-        try {
-          await addDoc(collection(db, 'auth_logs'), {
-            uid: user.uid,
-            email: user.email,
-            action: 'login',
-            userAgent: navigator.userAgent,
-            ts: serverTimestamp()
-          });
-        } catch (logErr) {
-          console.warn('Could not write auth log:', logErr);
-        }
-
-        // redirect based on role if you want immediate routing
-        const uSnap = await getDoc(doc(db, 'users', user.uid));
-        const role = uSnap.exists() ? (uSnap.data().role || 'user') : 'user';
-        if (role === 'admin') window.location.href = 'admin.html';
-        else window.location.href = 'dashboard.html';
-      } catch (err) {
-        console.error(err);
-        alert('Login failed: ' + (err.message || err));
+        await addDoc(collection(db, 'auth_logs'), {
+          uid: cred.user.uid,
+          email: cred.user.email,
+          action: 'login',
+          userAgent: navigator.userAgent,
+          ts: serverTimestamp()
+        });
+      } catch (logErr) {
+        console.warn('Could not write auth log:', logErr);
       }
-    });
-  </script>
+
+      // redirect as needed
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      console.error('signIn error', err);
+      alert('Login failed: ' + (err.message || err));
+    }
+  });
+</script>
 </body>
 </html>
+
 
