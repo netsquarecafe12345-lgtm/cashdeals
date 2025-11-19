@@ -400,6 +400,7 @@
 
 
 <script>
+  
   // Coin Data
   const coinsData = [
     {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
@@ -414,7 +415,7 @@
     {name:"Aster",symbol:"ASTER",price:1000,change:1.8,market:450000000,spark:[990,995,1000,1010,1005],color:"#00A3FF"}
   ];
 
-  function drawSparkline(canvas, prices, positive=true) {
+  function drawSparkline(canvas, prices, positive=true){
     canvas.width=100; canvas.height=40;
     const ctx=canvas.getContext('2d');
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -430,7 +431,7 @@
     ctx.lineWidth=2; ctx.stroke();
   }
 
-  function loadTable() {
+  function loadTable(){
     const tbody=document.querySelector("#coins-table tbody");
     tbody.innerHTML='';
     coinsData.forEach((coin,i)=>{
@@ -480,7 +481,6 @@
       drawSparkline(row.querySelector('canvas'), coin.spark, coin.change >= 0);
     });
   }
-
   // Auto-login
   const currentUser = localStorage.getItem('currentUser');
   if(currentUser){
