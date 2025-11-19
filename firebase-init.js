@@ -1,6 +1,7 @@
-// firebase-init.js
-// Small shim that re-exports the auth and db singletons from your existing app.js.
-// Place this file in the repository root (same folder as app.js and index.html).
-
+// firebase-init.js (diagnostic)
 import { auth, db } from './app.js';
+
+console.log('[firebase-init] auth?', !!auth, 'db?', !!db);
+console.log('[firebase-init] auth type:', typeof auth, 'db type:', typeof db);
+
 export { auth, db };
