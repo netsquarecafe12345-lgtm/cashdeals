@@ -48,7 +48,7 @@
         try {
             await signInWithEmailAndPassword(auth, email, password);
             // Redirect to admin page upon successful login
-            window.location.href = "admin.html";
+            window.location.href = "index.html";
         } catch (error) {
             alert("Login failed: " + error.message);
         }
@@ -57,3 +57,4 @@
 
 </body>
 </html>
+
