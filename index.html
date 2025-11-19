@@ -1,630 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>CashDeal Dashboard</title>
- <script type="module" src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
-
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-  body { background: #f5f6fa; }
-  /* Login / Signup */
-  #auth-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-  .auth-box {
-    background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    width: 350px;
-  }
-  .auth-box h2 { text-align: center; margin-bottom: 20px; }
-  .auth-box input {
-    width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;
-  }
-  .auth-box button {
-    width: 100%; padding: 10px; background: #1e90ff; color: #fff; border: none; border-radius: 4px;
-    cursor: pointer;
-  }
-  .switch {
-    text-align: center; margin-top: 10px; color: #1e90ff; cursor: pointer; user-select: none;
-  }
-  /* Dashboard */
-  #dashboard { display: none; height: 100vh; display: flex; }
-  .sidebar {
-    width: 220px; background: #1e1e1e; color: #fff; display: flex; flex-direction: column; padding-top: 20px;
-  }
-  .sidebar h2 { text-align: center; margin-bottom: 30px; }
-  .sidebar a {
-    padding: 15px 20px; text-decoration: none; color: white; display: block;
-  }
-  .sidebar a:hover { background: #333; }
-  .main { flex: 1; display: flex; flex-direction: column; }
-  header {
-    background: #1e1e1e; color: white; padding: 15px 30px; display: flex;
-    justify-content: space-between; align-items: center;
-  }
-  header .header-right {
-    display: flex; align-items: center; gap: 15px;
-  }
-  header button {
-    background: #1e90ff; color: white; border: none; padding: 6px 12px; border-radius: 4px;
-    cursor: pointer;
-  }
-  .profile-container {
-    display: flex; align-items: center; cursor: pointer; gap: 10px;
-  }
-  .profile-container img {
-    width: 30px; height: 30px; border-radius: 50%;
-  }
-  .profile-container span { color: white; font-size: 14px; }
-  .container { padding: 20px; overflow: auto; flex: 1; }
-  table {
-    width: 100%; border-collapse: collapse; background: white; border-radius: 8px;
-    overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;
-  }
-  th, td {
-    padding: 12px 15px; text-align: left;
-  }
-  th {
-    background: #1e90ff; color: white;
-  }
-  tr:nth-child(even) { background: #f9f9f9; }
-  .coin-name {
-    text-align: left; display: flex; align-items: center;
-  }
-  .coin-logo {
-    width: 24px; height: 24px; margin-right: 10px; border-radius: 50%;
-    background: #f0f0f0; display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 10px; color: white;
-  }
-  .price-change.positive { color: green; }
-  .price-change.negative { color: red; }
-  canvas { display: block; margin-top: 5px; width: 100px; height: 40px; }
-  /* BTC Converter Stats Table */
-  .converter-stats {
-    width: 100%; border-collapse: collapse; background: white; border-radius: 8px;
-    overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 10px;
-  }
-  .converter-stats th, .converter-stats td {
-    padding: 12px 15px; text-align: left;
-  }
-  .converter-stats th { background: #1e90ff; color: white; }
-  .converter-stats tbody tr:nth-child(even) { background: #f9f9f9; }
-  .change-cell.negative { color: red; font-weight: bold; }
-
-  /* Profile Modal */
-  #profile-modal {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
-  }
-  #profile-modal .modal-content {
-    background: white; padding: 30px; border-radius: 10px; width: 320px; position: relative;
-  }
-  #profile-modal h3 { text-align: center; margin-bottom: 20px; }
-  #profile-modal label {
-    display: block; margin-bottom: 6px; font-weight: bold;
-  }
-  #profile-modal input {
-    width: 100%; padding: 8px; margin-bottom: 15px;
-    border: 1px solid #ccc; border-radius: 4px;
-  }
-  #profile-modal button {
-    width: 100%; padding: 10px; background: #1e90ff;
-    border: none; color: white; border-radius: 5px; cursor: pointer;
-  }
-  #profile-close {
-    position: absolute; top: 10px; right: 15px; font-weight: bold;
-    font-size: 20px; cursor: pointer;
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CashDeal — Landing</title>
+  <style>
+    :root { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#222; }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#f5f6fa; }
+    .card { width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:10px; padding:28px; box-shadow:0 6px 30px rgba(16,24,40,0.08); }
+    h1 { margin:0 0 8px 0; font-size:20px; }
+    p { margin:0 0 18px 0; color:#555; }
+    .btn { display:inline-block; padding:10px 14px; border-radius:8px; text-decoration:none; color:#fff; background:#1e90ff; border:none; cursor:pointer; }
+    .outline { background:transparent; color:#1e90ff; border:1px solid #1e90ff; margin-left:10px; }
+    .meta { margin-top:14px; color:#777; font-size:13px; }
+    .loading { display:inline-block; width:14px; height:14px; border-radius:50%; border:2px solid rgba(0,0,0,0.08); border-top-color:#1e90ff; animation:spin 1s linear infinite; vertical-align:middle; margin-right:8px;}
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .hidden { display:none; }
+    .small { font-size:13px; color:#666; margin-top:10px; }
+  </style>
 </head>
 <body>
+  <div class="card" id="card">
+    <div id="loadingRow" class="">
+      <span class="loading" id="spinner" style="display:none"></span>
+      <strong id="status">Checking session…</strong>
+      <div class="meta" id="meta">This page connects your existing login/signup/admin pages to Firebase and routes users.</div>
+    </div>
 
-<!-- Login / Signup -->
-<div id="auth-container">
-  <div class="auth-box">
-    <h2 id="auth-title">Login</h2>
-    <input type="text" id="auth-username" placeholder="Username" autocomplete="username" />
-    <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
-    <button id="auth-button">Login</button>
-    <div class="switch" id="switch-auth">Don't have an account? Sign Up</div>
-  </div>
-</div>
-
-<!-- Dashboard -->
-<div id="dashboard">
-  <div class="sidebar">
-    <h2>CashDeal</h2>
-    <a href="#">Dashboard</a>
-    <a href="#">Assets</a>
-    <a href="#">Orders</a>
-    <a href="#">Spot</a>
-    <a href="#">Settings</a>
-    <a href="#" id="withdraw-link">Withdraw</a>
-    <a href="#" id="convert-link">Convert</a>
-    <a href="#" id="transfer-link">Transfer</a>
-    <a href="#">Trade</a>
-  </div>
-  <div class="main">
-    <header>
-      <span>Welcome, <strong id="username"></strong> | Chat on us via Support Chat</span>
-      <div class="header-right">
-        <div class="profile-container" id="profile-icon">
-          <img src="https://www.w3schools.com/w3images/avatar2.png" alt="Profile Icon" />
-          <span>Profile</span>
-        </div>
-        <button id="logout">Logout</button>
+    <div id="not-signed-in" class="hidden">
+      <h1>Welcome to CashDeal</h1>
+      <p>Sign in to access your dashboard. If you don't have an account create one.</p>
+      <div>
+        <a class="btn" href="login.html" id="btnLogin">Login</a>
+        <a class="btn outline" href="signup.html" id="btnSignup">Sign up</a>
       </div>
-    </header>
-    <div class="container">
-      <table id="coins-table">
-        <thead>
-          <tr><th>#</th><th>Name</th><th>Price (USD)</th><th>24h %</th><th>Market Cap (USD)</th><th>Chart</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="small">If you're an admin, sign in and you'll be redirected to the admin console automatically.</div>
+    </div>
 
-      <table class="converter-stats">
-        <thead>
-          <tr><th>Stats</th><th>Last 24 hours</th><th>Last 7 days</th><th>Last 30 days</th><th>Last 90 days</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>High</strong></td><td>$5,743,060</td><td>$6,328,176</td><td>$6,869,052</td><td>$7,342,136</td></tr>
-          <tr><td><strong>Low</strong></td><td>$5,555,549</td><td>$5,555,549</td><td>$5,555,549</td><td>$5,811,098</td></tr>
-          <tr><td><strong>Change</strong></td><td class="change-cell negative">-0.01%</td><td class="change-cell negative">-6.4%</td><td class="change-cell negative">-14.65%</td><td class="change-cell negative">-15.27%</td></tr>
-        </tbody>
-      </table>
+    <div id="signed-in" class="hidden">
+      <h1 id="welcomeTitle">Welcome</h1>
+      <p id="welcomeMsg"></p>
+      <div>
+        <button class="btn" id="btnContinue">Continue</button>
+        <button class="btn outline" id="btnSignout">Sign out</button>
+      </div>
+      <div class="small">If you're an admin you'll be taken to admin.html; otherwise to dashboard.html.</div>
     </div>
   </div>
-</div>
 
+  <script type="module">
+    import { auth, db } from './firebase-init.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
+    import { getDoc, doc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
 
-<!-- Profile Modal -->
-<div id="profile-modal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span id="profile-close" class="close">&times;</span>
-    <h2>Profile</h2>
-    <form id="profile-form">
-      <label for="email">Email:</label>
-      <input type="email" id="email" required><br><br>
-      
-      <label for="phone">Phone:</label>
-      <input type="tel" id="phone" required><br><br>
-      
-      <label for="balance">Balance:</label>
-      <input type="number" id="balance" disabled style="background:#eee; cursor:not-allowed;">
+    // UI elements
+    const statusEl = document.getElementById('status');
+    const spinner = document.getElementById('spinner');
+    const notSignedIn = document.getElementById('not-signed-in');
+    const signedIn = document.getElementById('signed-in');
+    const welcomeTitle = document.getElementById('welcomeTitle');
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    const btnContinue = document.getElementById('btnContinue');
+    const btnSignout = document.getElementById('btnSignout');
 
-      
-      <button type="submit">Save</button>
-    </form>
-  </div>
-</div>
- <!-- Withdraw Modal -->
-<div id="withdraw-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-  <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
-    <h3>Withdraw Funds</h3>
-    <p>Select Payment Option:</p>
-    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
-      <option value="BTC">BTC</option>
-      <option value="Coins">Coins</option>
-      <option value="Alipay">Alipay</option>
-      <option value="Wechat">Wechat</option>
-    </select>
-    <input type="number" id="withdraw-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
-    <button id="withdraw-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
-    <span id="withdraw-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
-  </div>
-</div>
-
-<!-- Transfer Modal -->
-<div id="transfer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-  <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
-    <h3>Transfer Funds</h3>
-    <p>Select Payment Option:</p>
-    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
-      <option value="BTC">BTC</option>
-      <option value="Coins">Coins</option>
-      <option value="Alipay">Alipay</option>
-      <option value="Wechat">Wechat</option>
-    </select>
-    <input type="number" id="transfer-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
-    <button id="transfer-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
-    <span id="transfer-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
-  </div>
-</div>
-<!-- Conversion Modal -->
-<div id="convert-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-  <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
-    <h3>Convert BTC</h3>
-    <p>Select Coins for Conversion:</p>
-    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
-      <option value="ETH">ETH</option>
-      <option value="USDT">USDT</option>
-      <option value="USDC">USDC</option>
-      <option value="ADA">ADA</option>
-      <option value="AEVO">AEVO</option>
-      <option value="APE">APE</option>
-      <option value="ASTER">ASTER</option>
-    </select>
-    <input type="number" id="transfer-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
-    <button id="convert-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
-    <span id="convert-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
-  </div>
-</div>
-<script type="module">
-// Firebase Config
-const firebaseConfig = {
-    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-    authDomain: "cashdeals-185df.firebaseapp.com",
-    projectId: "cashdeals-185df",
-    storageBucket: "cashdeals-185df.appspot.com",
-    messagingSenderId: "749879075742",
-    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
-
-// Import Firebase SDK
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-</script>
-
-
-<script type="module">
-  // Elements
-  const authContainer = document.getElementById('auth-container');
-  const dashboard = document.getElementById('dashboard');
-  const authTitle = document.getElementById('auth-title');
-  const authButton = document.getElementById('auth-button');
-  const switchAuth = document.getElementById('switch-auth');
-  const authUsername = document.getElementById('auth-username');
-  const authPassword = document.getElementById('auth-password');
-  const usernameDisplay = document.getElementById('username');
-  const balanceDisplay = document.getElementById('balance');
-  const logoutBtn = document.getElementById('logout');
-
-  let loginMode = true;
-
- // Update the auth UI based on login/signup mode
-function updateAuthUI() {
-  if (loginMode) {
-    authTitle.textContent = 'Login';
-    authButton.textContent = 'Login';
-    switchAuth.textContent = "Don't have an account? Sign Up";
-    authPassword.placeholder = 'Password';
-    authPassword.autocomplete = 'current-password';
-  } else {
-    authTitle.textContent = 'Sign Up';
-    authButton.textContent = 'Sign Up';
-    switchAuth.textContent = "Already have an account? Login";
-    authPassword.placeholder = 'Choose Password';
-    authPassword.autocomplete = 'new-password';
-  }
-}
-
-// Toggle between login and signup modes
-switchAuth.addEventListener('click', () => {
-  loginMode = !loginMode;
-  updateAuthUI();
-  authUsername.value = '';
-  authPassword.value = '';
-  authUsername.focus();
-});
-
-  
-
-  // Login or Signup handler
-  authButton.addEventListener('click', () => {
-    const email = authUsername.value.trim();
-    const password = authPassword.value;
-
-    if (!email || !password) {
-      alert("Enter email and password");
-      return;
+    function showLoading(text = 'Checking session…') {
+      statusEl.textContent = text;
+      spinner.style.display = 'inline-block';
+      notSignedIn.classList.add('hidden');
+      signedIn.classList.add('hidden');
     }
- if (loginMode) {
-    // Firebase login
-    auth.signInWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        showDashboard(user);
-      })
-      .catch((error) => {
-        alert('Invalid email or password');
-      });
-  } else {
 
- // Firebase signup
-    auth.createUserWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        // Save additional user data in Firestore
-        db.collection('users').doc(user.uid).set({
-          email: user.email,
-          balance: 150000,
-        })
-        .then(() => {
-          alert('Account created! You can now login.');
-          loginMode = true;
-          updateAuthUI();
-        });
-      })
-      .catch((error) => {
-        alert('Error creating account: ' + error.message);
-      });
-  }
-});
+    function showNotSignedIn() {
+      spinner.style.display = 'none';
+      statusEl.textContent = 'Not signed in';
+      notSignedIn.classList.remove('hidden');
+      signedIn.classList.add('hidden');
+    }
 
+    function showSignedIn(user) {
+      spinner.style.display = 'none';
+      welcomeTitle.textContent = `Welcome, ${user.displayName || user.email || user.uid}`;
+      welcomeMsg.textContent = `Signed in as ${user.email || user.uid}. Choose Continue to go to your dashboard.`;
+      notSignedIn.classList.add('hidden');
+      signedIn.classList.remove('hidden');
+    }
 
-  // Show Dashboard
-  function showDashboard(userData){
-    authContainer.style.display = 'none';
-    dashboard.style.display = 'flex';
-// Display user's email and balance
-  usernameDisplay.textContent = user.email;
-  // Get user balance from Firestore
-  db.collection('users').doc(user.uid).get()
-    .then((doc) => {
-      if (doc.exists) {
-        balanceDisplay.textContent = doc.data().balance.toLocaleString();
-      } else {
-        balanceDisplay.textContent = '0'; // Default balance if not found
+    // Keep a reference to last seen user doc role to avoid double fetch
+    let lastRole = null;
+    let lastUserUid = null;
+
+    // Start UI
+    showLoading();
+
+    onAuthStateChanged(auth, async (user) => {
+      try {
+        if (!user) {
+          // no user — show sign in links
+          showNotSignedIn();
+          return;
+        }
+
+        // user exists — show signed-in UI while we determine role
+        showSignedIn(user);
+        statusEl.textContent = 'Detecting user role…';
+        spinner.style.display = 'inline-block';
+
+        // fetch role from users collection (users/<uid>)
+        const uRef = doc(db, 'users', user.uid);
+        const uSnap = await getDoc(uRef);
+
+        let role = 'user';
+        if (uSnap.exists()) {
+          const data = uSnap.data();
+          role = data.role || 'user';
+        }
+
+        lastRole = role;
+        lastUserUid = user.uid;
+
+        spinner.style.display = 'none';
+        statusEl.textContent = `Signed in as ${role}`;
+
+        // Continue button routes user based on role
+        btnContinue.onclick = () => {
+          if (role === 'admin') {
+            window.location.href = 'admin.html';
+          } else {
+            // Use dashboard.html (adjust path if your user dashboard is named differently)
+            window.location.href = 'dashboard.html';
+          }
+        };
+
+      } catch (err) {
+        console.error('Error while handling auth state:', err);
+        spinner.style.display = 'none';
+        statusEl.textContent = 'Error detecting session';
+        notSignedIn.classList.remove('hidden');
       }
     });
-   
-    loadTable();
-  }
 
-  // Logout handler
-logoutBtn.addEventListener('click', () => {
-  auth.signOut().then(() => {
-    dashboard.style.display = 'none';
-    authContainer.style.display = 'flex';
-    authUsername.value = '';
-    authPassword.value = '';
-    authUsername.focus();
-  }).catch((error) => {
-    alert('Error logging out: ' + error.message);
-  });
-});
- 
- // Monitor authentication state to handle session
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    showDashboard(user);
-  } else {
-    authContainer.style.display = 'flex';
-    dashboard.style.display = 'none';
-  }
-});
-
-// Initialize UI on page load
-updateAuthUI();
-
-  // Coin Data
-  const coinsData = [
-    {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
-    {name:"Ethereum",symbol:"ETH",price:90000,change:-1.2,market:900000000,spark:[88000,89000,89500,90500,90000],color:"#627EEA"},
-    {name:"Tether",symbol:"USDT",price:55,change:0.1,market:600000000,spark:[55,55,55,55,55],color:"#26A17B"},
-    {name:"USD Coin",symbol:"USDC",price:55,change:-0.05,market:550000000,spark:[55,55,55,55,55],color:"#2775CA"},
-    {name:"AAVE",symbol:"AAVE",price:7500,change:1.5,market:600000000,spark:[7400,7450,7500,7550,7500],color:"#B6509E"},
-    {name:"Cardano",symbol:"ADA",price:80,change:1.0,market:1000000000,spark:[78,79,80,81,80],color:"#0033AD"},
-    {name:"AEVO",symbol:"AEVO",price:500,change:-0.5,market:200000000,spark:[495,500,505,510,505],color:"#1C1C1C"},
-    {name:"ApeCoin",symbol:"APE",price:2500,change:0.5,market:500000000,spark:[2450,2500,2550,2600,2500],color:"#0052FF"},
-    {name:"Arkham",symbol:"ARK",price:3000,change:2.2,market:600000000,spark:[2900,2950,3000,3050,3000],color:"#FF6B00"},
-    {name:"Aster",symbol:"ASTER",price:1000,change:1.8,market:450000000,spark:[990,995,1000,1010,1005],color:"#00A3FF"}
-  ];
-
-  function drawSparkline(canvas, prices, positive=true){
-    canvas.width=100; canvas.height=40;
-    const ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.beginPath();
-    const max=Math.max(...prices), min=Math.min(...prices);
-    const stepX=canvas.width/(prices.length-1);
-    prices.forEach((p,i)=>{
-      const x=i*stepX;
-      const y=canvas.height-((p-min)/(max-min||1))*canvas.height;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    // Sign out
+    btnSignout.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        showNotSignedIn();
+      } catch (err) {
+        console.error('Sign out error', err);
+        alert('Error signing out: ' + err.message);
+      }
     });
-    ctx.strokeStyle=positive?'green':'red';
-    ctx.lineWidth=2; ctx.stroke();
-  }
-
-  function loadTable(){
-    const tbody=document.querySelector("#coins-table tbody");
-    tbody.innerHTML='';
-    coinsData.forEach((coin,i)=>{
-      const tr=document.createElement('tr');
-      const changeClass=coin.change>=0?'positive':'negative';
-
-      const logoDiv = document.createElement('div');
-      logoDiv.className = 'coin-logo';
-      logoDiv.style.backgroundColor = coin.color;
-      logoDiv.textContent = coin.symbol.substring(0,3);
-
-      tr.innerHTML=`
-        <td>${i+1}</td>
-        <td class="coin-name"></td>
-        <td>${coin.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-        <td class="price-change ${changeClass}">${coin.change.toFixed(2)}%</td>
-        <td>${coin.market.toLocaleString()}</td>
-        <td><canvas></canvas></td>
-      `;
-
-      const coinNameCell = tr.querySelector('.coin-name');
-      coinNameCell.appendChild(logoDiv);
-      coinNameCell.appendChild(document.createTextNode(` ${coin.symbol} - ${coin.name}`));
-      tbody.appendChild(tr);
-      drawSparkline(tr.querySelector('canvas'), coin.spark, coin.change>=0);
-    });
-  }
-
-  function updatePricesAndCharts() {
-    coinsData.forEach((coin, i) => {
-      const changePercent = (Math.random() * 2 - 1) * 1;
-      const newPrice = Math.max(1, coin.price + coin.price * changePercent / 100);
-      coin.price = newPrice;
-      coin.spark.shift();
-      coin.spark.push(newPrice);
-      coin.change = ((coin.spark[coin.spark.length-1] - coin.spark[0]) / coin.spark[0]) * 100;
-
-      const tbody = document.querySelector("#coins-table tbody");
-      const row = tbody.children[i];
-      if(!row) return;
-
-      row.children[2].textContent = newPrice.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-      const changeCell = row.children[3];
-      changeCell.textContent = coin.change.toFixed(2) + '%';
-      changeCell.className = 'price-change ' + (coin.change >= 0 ? 'positive' : 'negative');
-
-      drawSparkline(row.querySelector('canvas'), coin.spark, coin.change >= 0);
-    });
-  }
-
-  // Auto-login
-  const currentUser = localStorage.getItem('currentUser');
-  if(currentUser){
-    const users=JSON.parse(localStorage.getItem('users'));
-    if(users[currentUser]) showDashboard(users[currentUser]);
-  }
-
-  setInterval(() => {
-    if(dashboard.style.display==='flex'){
-      updatePricesAndCharts();
-    }
-  }, 2000);
-
-  // Profile Modal logic
-  const profileIcon = document.getElementById('profile-icon');
-  const profileModal = document.getElementById('profile-modal');
-  const profileClose = document.getElementById('profile-close');
-  const profileForm = document.getElementById('profile-form');
-
-  profileIcon.addEventListener('click', () => {
-    profileModal.style.display = 'flex';
-  });
-
-  profileClose.addEventListener('click', () => {
-    profileModal.style.display = 'none';
-  });
-
-  window.addEventListener('click', (e) => {
-    if (e.target === profileModal) {	
-      profileModal.style.display = 'none';
-    }
-  });
-
-  profileForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    if(!email) {
-      alert('Please enter a valid email.');
-      return;
-    }
-    alert(`Profile saved:\nEmail: ${email}\nPhone: ${phone}`);
-    profileModal.style.display = 'none';
-    // Optionally, add persistent profile saving here
-  });
- // Modal logic for Withdraw
-const withdrawLink = document.getElementById('withdraw-link');
-const withdrawModal = document.getElementById('withdraw-modal');
-const withdrawClose = document.getElementById('withdraw-close');
-const withdrawConfirm = document.getElementById('withdraw-confirm');
-
-withdrawLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  withdrawModal.style.display = 'flex';
-});
-
-withdrawClose.addEventListener('click', ()=>{
-  withdrawModal.style.display = 'none';
-});
-
-withdrawConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('withdraw-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Withdraw ${amount} via ${method} initiated!`);
-  withdrawModal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-withdrawModal.addEventListener('click', (e)=>{
-  if(e.target === withdrawModal) withdrawModal.style.display='none';
-});
-
-// Modal logic for Transfer
-const transferLink = document.getElementById('transfer-link');
-const transferModal = document.getElementById('transfer-modal');
-const transferClose = document.getElementById('transfer-close');
-const transferConfirm = document.getElementById('transfer-confirm');
-
-transferLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  transferModal.style.display = 'flex';
-});
-
-transferClose.addEventListener('click', ()=>{
-  transferModal.style.display = 'none';
-});
-
-transferConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('transfer-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Transfer ${amount} via ${method} initiated!`);
-  transferModal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-transferModal.addEventListener('click', (e)=>{
-  if(e.target === transferModal) transferModal.style.display='none';
-});
-// Modal logic for Convert
-const convertLink = document.getElementById('convert-link');
-const convertModal = document.getElementById('convert-modal');
-const convertClose = document.getElementById('convert-close');
-const convertConfirm = document.getElementById('convert-confirm');
-
-convertLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  convertModal.style.display = 'flex';
-});
-
-convertClose.addEventListener('click', ()=>{
-  convertModal.style.display = 'none';
-});
-
-convertConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('convert-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Convert ${amount} via ${method} initiated!`);
-  convertModal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-convertModal.addEventListener('click', (e)=>{
-  if(e.target === convertModal) convertModal.style.display='none';
-});
-
-
-
-
-</script>
+  </script>
 </body>
 </html>
