@@ -112,7 +112,6 @@
     font-size: 20px; cursor: pointer;
   }
 </style>
-
 </head>
 <body>
 
@@ -120,13 +119,10 @@
 <div id="auth-container">
   <div class="auth-box">
     <h2 id="auth-title">Login</h2>
-    <input type="text" id="auth-username" placeholder="email" autocomplete="username" />
+    <input type="text" id="auth-username" placeholder="Username" autocomplete="username" />
     <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
     <button id="auth-button">Login</button>
     <div class="switch" id="switch-auth">Don't have an account? Sign Up</div>
-  </div>
-</div>
-    
   </div>
 </div>
 
@@ -145,8 +141,8 @@
     <a href="#">Trade</a>
   </div>
   <div class="main">
- <header>
-      <span>Welcome, <strong id="username"></strong> |CHAT SUPPORT TO UPDATE BALANCE| </span>
+    <header>
+      <span>Welcome, <strong id="username"></strong> | Balance: $<span id="balance"></span></span>
       <div class="header-right">
         <div class="profile-container" id="profile-icon">
           <img src="https://www.w3schools.com/w3images/avatar2.png" alt="Profile Icon" />
@@ -176,6 +172,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Profile Modal -->
 <div id="profile-modal" class="modal" style="display:none;">
@@ -251,27 +248,7 @@
 </div>
 
 
-<script type="module">
-  // Firebase v12 SDK imports
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-    authDomain: "cashdeals-185df.firebaseapp.com",
-    projectId: "cashdeals-185df",
-    storageBucket: "cashdeals-185df.appspot.com",
-    messagingSenderId: "749879075742",
-    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
+<script>
   // Elements
   const authContainer = document.getElementById('auth-container');
   const dashboard = document.getElementById('dashboard');
@@ -286,22 +263,13 @@
 
   let loginMode = true;
 
-  // Check if the user is authenticated when the page loads
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // If the user is authenticated, show the dashboard
-      showDashboard(user);
-    } else {
-      // If the user is not authenticated, show the login form
-      authContainer.style.display = 'flex';
-      dashboard.style.display = 'none';
-    }
-  });
+  // Initialize users storage if none
+  if (!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify({}));
 
   // Toggle login/signup UI
   switchAuth.addEventListener('click', () => {
     loginMode = !loginMode;
-    if (loginMode) {
+    if(loginMode) {
       authTitle.textContent = 'Login';
       authButton.textContent = 'Login';
       switchAuth.textContent = "Don't have an account? Sign Up";
@@ -329,78 +297,56 @@
       return;
     }
 
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+
     if (loginMode) {
-      // Login with Firebase
-      signInWithEmailAndPassword(auth, username, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log("User logged in:", user);
-          showDashboard(user);
-        })
-        .catch((error) => {
-          alert('Invalid username or password');
-          console.error('Login error:', error);
-        });
+      if(users[username] && users[username].password === password) {
+        localStorage.setItem('currentUser', username);
+        showDashboard(users[username]);
+        authUsername.value = '';
+        authPassword.value = '';
+      } else {
+        alert('Invalid username or password');
+      }
     } else {
-      // Sign Up with Firebase
-      createUserWithEmailAndPassword(auth, username, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log("User signed up:", user);
-          alert('Account created! You can now login.');
-          loginMode = true;
-          authTitle.textContent = 'Login';
-          authButton.textContent = 'Login';
-          switchAuth.textContent = "Don't have an account? Sign Up";
-          authPassword.placeholder = 'Password';
-          authPassword.autocomplete = 'current-password';
-          authUsername.value = '';
-          authPassword.value = '';
-        })
-        .catch((error) => {
-          alert('Error creating account: ' + error.message);
-          console.error('Signup error:', error);
-        });
+      if(users[username]) {
+        alert('Username already exists');
+      } else {
+        users[username] = { password: password, balance: 150000 };
+        localStorage.setItem('users', JSON.stringify(users));
+        alert('Account created! You can now login.');
+        loginMode = true;
+        authTitle.textContent = 'Login';
+        authButton.textContent = 'Login';
+        switchAuth.textContent = "Don't have an account? Sign Up";
+        authPassword.placeholder = 'Password';
+        authPassword.autocomplete = 'current-password';
+        authUsername.value = '';
+        authPassword.value = '';
+        authUsername.focus();
+      }
     }
   });
 
   // Show Dashboard
-  function showDashboard(user) {
+  function showDashboard(userData){
     authContainer.style.display = 'none';
     dashboard.style.display = 'flex';
-    usernameDisplay.textContent = user.email;
-    
-    // Fetch additional user data (optional, e.g., balance) from Firestore
-    const userRef = doc(db, "users", user.uid);
-    getDoc(userRef).then((docSnap) => {
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        balanceDisplay.textContent = userData.balance ? userData.balance.toLocaleString() : "0";
-      } else {
-        console.log("No such document for user!");
-      }
-    }).catch((error) => {
-      console.error("Error fetching user data:", error);
-    });
+    usernameDisplay.textContent = localStorage.getItem('currentUser');
+    balanceDisplay.textContent = userData.balance.toLocaleString();
+    loadTable();
   }
 
-  // Logout handler
+  // Logout clears session and show login screen
   logoutBtn.addEventListener('click', () => {
-    auth.signOut().then(() => {
-      authContainer.style.display = 'flex';
-      dashboard.style.display = 'none';
-      authUsername.value = '';
-      authPassword.value = '';
-      authUsername.focus();
-    }).catch((error) => {
-      console.error('Error signing out:', error);
-    });
+    localStorage.removeItem('currentUser');
+    dashboard.style.display = 'none';
+    authContainer.style.display = 'flex';
+    authUsername.value = '';
+    authPassword.value = '';
+    authUsername.focus();
   });
-</script>
 
-
-<script>
-  
   // Coin Data
   const coinsData = [
     {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
@@ -481,6 +427,7 @@
       drawSparkline(row.querySelector('canvas'), coin.spark, coin.change >= 0);
     });
   }
+
   // Auto-login
   const currentUser = localStorage.getItem('currentUser');
   if(currentUser){
@@ -500,164 +447,127 @@
   const profileClose = document.getElementById('profile-close');
   const profileForm = document.getElementById('profile-form');
 
-  // Helper function to get current user data
-  function getCurrentUserData() {
-    const username = localStorage.getItem('currentUser');
-    if (!username) return null;
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    return users[username] || null;
-  }
-
-  // Show profile modal with preset data
-  function showProfileModal() {
-    const userData = getCurrentUserData();
-    if (!userData) return;
-
-    document.getElementById('email').value = userData.email || '';
-    document.getElementById('phone').value = userData.phone || '';
-    document.getElementById('balance').value = userData.balance !== undefined ? userData.balance : 0;
-
+  profileIcon.addEventListener('click', () => {
     profileModal.style.display = 'flex';
-  }
+  });
 
+  profileClose.addEventListener('click', () => {
+    profileModal.style.display = 'none';
+  });
 
-  // Save profile updates
-  document.getElementById('profile-form').addEventListener('submit', (e) => {
+  window.addEventListener('click', (e) => {
+    if (e.target === profileModal) {	
+      profileModal.style.display = 'none';
+    }
+  });
+
+  profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    const balance = parseFloat(document.getElementById('balance').value);
-
-    if (!email) {
+    if(!email) {
       alert('Please enter a valid email.');
       return;
     }
-
-    const username = localStorage.getItem('currentUser');
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-
-    if (users[username]) {
-      users[username].email = email;
-      users[username].phone = phone;
-      users[username].balance = balance; // Save new balance
-      localStorage.setItem('users', JSON.stringify(users));
-      alert('Profile updated!');
-
-      // Update balance display in dashboard
-      document.getElementById('balance').textContent = balance.toLocaleString();
-
-      // Close modal
-      profileModal.style.display = 'none';
-    }
-  });
-
-  // Modal close handlers
-  document.getElementById('profile-close').addEventListener('click', () => {
+    alert(`Profile saved:\nEmail: ${email}\nPhone: ${phone}`);
     profileModal.style.display = 'none';
+    // Optionally, add persistent profile saving here
   });
-  window.addEventListener('click', (e) => {
-    if (e.target === profileModal) {
-      profileModal.style.display = 'none';
-    }
-  });
+ // Modal logic for Withdraw
+const withdrawLink = document.getElementById('withdraw-link');
+const withdrawModal = document.getElementById('withdraw-modal');
+const withdrawClose = document.getElementById('withdraw-close');
+const withdrawConfirm = document.getElementById('withdraw-confirm');
 
-  // Modal logic for Withdraw
-  const withdrawLink = document.getElementById('withdraw-link');
-  const withdrawModal = document.getElementById('withdraw-modal');
-  const withdrawClose = document.getElementById('withdraw-close');
-  const withdrawConfirm = document.getElementById('withdraw-confirm');
-
-  withdrawLink.addEventListener('click', (e)=>{
-    e.preventDefault();
-    withdrawModal.style.display = 'flex';
-  });
-
-  withdrawClose.addEventListener('click', ()=>{
-    withdrawModal.style.display = 'none';
-  });
-
-  withdrawConfirm.addEventListener('click', ()=>{
-    const method = document.getElementById('payment-method').value;
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    if(!amount || amount <= 0){
-      alert("Enter a valid amount");
-      return;
-    }
-    alert(`Withdraw ${amount} via ${method} initiated!`);
-    withdrawModal.style.display = 'none';
-  });
-
-  // Close modal when clicking outside
-  withdrawModal.addEventListener('click', (e)=>{
-    if(e.target === withdrawModal) withdrawModal.style.display='none';
-  });
-
-  // Modal logic for Transfer
-  const transferLink = document.getElementById('transfer-link');
-  const transferModal = document.getElementById('transfer-modal');
-  const transferClose = document.getElementById('transfer-close');
-  const transferConfirm = document.getElementById('transfer-confirm');
-
-  transferLink.addEventListener('click', (e)=>{
-    e.preventDefault();
-    transferModal.style.display = 'flex';
-  });
-
-  transferClose.addEventListener('click', ()=>{
-    transferModal.style.display = 'none';
-  });
-
-  transferConfirm.addEventListener('click', ()=>{
-    const method = document.getElementById('payment-method').value;
-    const amount = parseFloat(document.getElementById('transfer-amount').value);
-    if(!amount || amount <= 0){
-      alert("Enter a valid amount");
-      return;
-    }
-    alert(`Transfer ${amount} via ${method} initiated!`);
-    transferModal.style.display = 'none';
-  });
-
-  // Close modal when clicking outside
-  transferModal.addEventListener('click', (e)=>{
-    if(e.target === transferModal) transferModal.style.display='none';
-  });
-
-  // Modal logic for Convert
-  const convertLink = document.getElementById('convert-link');
-  const convertModal = document.getElementById('convert-modal');
-  const convertClose = document.getElementById('convert-close');
-  const convertConfirm = document.getElementById('convert-confirm');
-
-  convertLink.addEventListener('click', (e)=>{
-    e.preventDefault();
-    convertModal.style.display = 'flex';
-  });
-
-  convertClose.addEventListener('click', ()=>{
-    convertModal.style.display = 'none';
-  });
-
-  convertConfirm.addEventListener('click', ()=>{
-    const method = document.getElementById('payment-method').value;
-    const amount = parseFloat(document.getElementById('convert-amount').value);
-    if(!amount || amount <= 0){
-      alert("Enter a valid amount");
-      return;
-    }
-    alert(`Convert ${amount} via ${method} initiated!`);
-    convertModal.style.display = 'none';
-  });
-
-  // Close modal when clicking outside
-  convertModal.addEventListener('click', (e)=>{
-    if(e.target === convertModal) convertModal.style.display='none';
-   });
- document.addEventListener('DOMContentLoaded', () => {
-  loadTable();
+withdrawLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  withdrawModal.style.display = 'flex';
 });
-  
- 
+
+withdrawClose.addEventListener('click', ()=>{
+  withdrawModal.style.display = 'none';
+});
+
+withdrawConfirm.addEventListener('click', ()=>{
+  const method = document.getElementById('payment-method').value;
+  const amount = parseFloat(document.getElementById('withdraw-amount').value);
+  if(!amount || amount <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  alert(`Withdraw ${amount} via ${method} initiated!`);
+  withdrawModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+withdrawModal.addEventListener('click', (e)=>{
+  if(e.target === withdrawModal) withdrawModal.style.display='none';
+});
+
+// Modal logic for Transfer
+const transferLink = document.getElementById('transfer-link');
+const transferModal = document.getElementById('transfer-modal');
+const transferClose = document.getElementById('transfer-close');
+const transferConfirm = document.getElementById('transfer-confirm');
+
+transferLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  transferModal.style.display = 'flex';
+});
+
+transferClose.addEventListener('click', ()=>{
+  transferModal.style.display = 'none';
+});
+
+transferConfirm.addEventListener('click', ()=>{
+  const method = document.getElementById('payment-method').value;
+  const amount = parseFloat(document.getElementById('transfer-amount').value);
+  if(!amount || amount <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  alert(`Transfer ${amount} via ${method} initiated!`);
+  transferModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+transferModal.addEventListener('click', (e)=>{
+  if(e.target === transferModal) transferModal.style.display='none';
+});
+// Modal logic for Convert
+const convertLink = document.getElementById('convert-link');
+const convertModal = document.getElementById('convert-modal');
+const convertClose = document.getElementById('convert-close');
+const convertConfirm = document.getElementById('convert-confirm');
+
+convertLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  convertModal.style.display = 'flex';
+});
+
+convertClose.addEventListener('click', ()=>{
+  convertModal.style.display = 'none';
+});
+
+convertConfirm.addEventListener('click', ()=>{
+  const method = document.getElementById('payment-method').value;
+  const amount = parseFloat(document.getElementById('convert-amount').value);
+  if(!amount || amount <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  alert(`Convert ${amount} via ${method} initiated!`);
+  convertModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+convertModal.addEventListener('click', (e)=>{
+  if(e.target === convertModal) convertModal.style.display='none';
+});
+
+
+
+
 </script>
 </body>
 </html>
