@@ -1,63 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+  <meta charset="utf-8" />
+  <title>Login — CashDeal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f6fa; display:flex; align-items:center; justify-content:center; height:100vh; }
+    .box { background:white; padding:24px; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.06); width:360px; }
+    input { width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:6px; }
+    button { width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:6px; cursor:pointer; }
+    .muted { color:#666; font-size:13px; margin-top:10px; }
+    a { color:#1e90ff; }
+  </style>
 </head>
 <body>
+  <div class="box">
+    <h2>Login</h2>
+    <input id="email" placeholder="Email" type="email" autocomplete="username" />
+    <input id="password" placeholder="Password" type="password" autocomplete="current-password" />
+    <button id="btn-login">Login</button>
+    <div class="muted">Don't have an account? <a href="signup.html">Sign up</a></div>
+  </div>
 
-<h2>Login</h2>
+  <script type="module">
+    import { auth, db } from './firebase-init.js';
+    import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
+    import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
 
-<!-- Email input -->
-<input type="email" id="login-email" placeholder="Enter your email" required><br><br>
+    const emailEl = document.getElementById('email');
+    const passEl = document.getElementById('password');
+    const btn = document.getElementById('btn-login');
 
-<!-- Password input -->
-<input type="password" id="login-password" placeholder="Enter your password" required><br><br>
+    btn.addEventListener('click', async () => {
+      const email = emailEl.value.trim();
+      const password = passEl.value;
+      if (!email || !password) return alert('Enter email + password');
 
-<!-- Login button -->
-<button id="login-button">Login</button><br><br>
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
 
-<!-- Link to signup page -->
-<p>Don't have an account? <a href="signup.html">Sign up</a></p>
+        // Log login event for admin visibility
+        try {
+          await addDoc(collection(db, 'auth_logs'), {
+            uid: user.uid,
+            email: user.email,
+            action: 'login',
+            userAgent: navigator.userAgent,
+            ts: serverTimestamp()
+          });
+        } catch (logErr) {
+          console.warn('Could not write auth log:', logErr);
+        }
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
-// Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-    authDomain: "cashdeals-185df.firebaseapp.com",
-    projectId: "cashdeals-185df",
-    storageBucket: "cashdeals-185df.appspot.com",
-    messagingSenderId: "749879075742",
-    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-document.getElementById("login-button").addEventListener("click", async () => {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-
-    try {
-        // 1. Sign in the user
-        await signInWithEmailAndPassword(auth, email, password);
-
-         // ✅ User is now logged in, redirect to main site
-        alert("Account created! Redirecting to CashDeals site...");
-        window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals/";
-
-    } catch (error) {
-        alert("Signup failed: " + error.message);
-    }
-});
-</script>
-
+        // redirect based on role if you want immediate routing
+        const uSnap = await getDoc(doc(db, 'users', user.uid));
+        const role = uSnap.exists() ? (uSnap.data().role || 'user') : 'user';
+        if (role === 'admin') window.location.href = 'admin.html';
+        else window.location.href = 'dashboard.html';
+      } catch (err) {
+        console.error(err);
+        alert('Login failed: ' + (err.message || err));
+      }
+    });
+  </script>
 </body>
 </html>
-
-
