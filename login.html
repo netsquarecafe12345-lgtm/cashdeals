@@ -26,7 +26,7 @@
         apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
         authDomain: "cashdeals-185df.firebaseapp.com",
         projectId: "cashdeals-185df",
-        storageBucket: "cashdeals-185df.appspot.com", // Corrected this line
+        storageBucket: "cashdeals-185df.appspot.com",
         messagingSenderId: "749879075742",
         appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
     };
@@ -39,24 +39,32 @@
         const email = document.getElementById("login-email").value.trim();
         const password = document.getElementById("login-password").value.trim();
 
-        // Basic validation
         if (!email || !password) {
             alert("Please enter both email and password.");
             return;
         }
-        
+
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // Redirect to Index page upon successful login
-            window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals";
+
+            // Redirect to your GitHub Pages homepage (index.html)
+            window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals/index.html";
+
         } catch (error) {
-            alert("Login failed: " + error.message);
+            let message = "Login failed.";
+
+            if (error.code === "auth/user-not-found") {
+                message = "No account found with this email.";
+            } else if (error.code === "auth/wrong-password") {
+                message = "Incorrect password.";
+            } else if (error.code === "auth/invalid-email") {
+                message = "Invalid email address.";
+            }
+
+            alert(message);
         }
     });
 </script>
 
 </body>
 </html>
-
-
-
