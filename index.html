@@ -271,7 +271,9 @@
   const profileClose = document.getElementById('profile-close');
   const profileForm = document.getElementById('profile-form');
 
-  // static coins (keeps coins present)
+  let isAdmin = false;
+
+  // static coins
   const coinsData = [
     {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
     {name:"Ethereum",symbol:"ETH",price:90000,change:-1.2,market:900000000,spark:[88000,89000,89500,90500,90000],color:"#627EEA"},
@@ -285,7 +287,6 @@
     {name:"Aster",symbol:"ASTER",price:1000,change:1.8,market:450000000,spark:[990,995,1000,1010,1005],color:"#00A3FF"}
   ];
 
-  // draw sparkline
   function drawSparkline(canvas, prices, positive=true){
     canvas.width = 100; canvas.height = 40;
     const ctx = canvas.getContext('2d');
@@ -302,7 +303,6 @@
     ctx.lineWidth = 2; ctx.stroke();
   }
 
-  // render coins table
   function loadTable(){
     const tbody = document.querySelector("#coins-table tbody");
     tbody.innerHTML = '';
@@ -332,7 +332,6 @@
     });
   }
 
-  // Updates prices and charts periodically (simulated)
   function updatePricesAndCharts() {
     coinsData.forEach((coin, i) => {
       const changePercent = (Math.random() * 2 - 1) * 1;
@@ -355,7 +354,6 @@
     });
   }
 
-  // Auto refresh timer handle
   let autoUpdateTimer = null;
   function startAutoUpdate() {
     if (autoUpdateTimer) return;
@@ -370,133 +368,114 @@
     }
   }
 
-  // Auth state: show dashboard and load user data
+  // AUTH + ADMIN CHECK
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // Not signed in — redirect to login
       window.location.href = "login.html";
       return;
     }
 
-    // Show dashboard
     dashboard.style.display = 'flex';
 
-    // Load Firestore user doc at users/{uid}
     try {
       const userDocRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userDocRef);
 
       if (userSnap.exists()) {
         const data = userSnap.data();
+
+        // check admin
+        isAdmin = data.role === "admin";
+
+        // disable balance for NON-admin
+        if (!isAdmin) {
+          balanceInput.disabled = true;
+          balanceInput.style.background = "#eee";
+          balanceInput.style.cursor = "not-allowed";
+        } else {
+          balanceInput.disabled = false; // admin can edit
+          balanceInput.style.background = "#fff";
+          balanceInput.style.cursor = "text";
+        }
+
         usernameEl.textContent = data.username || data.email || user.email || 'User';
         document.getElementById('email').value = data.email || user.email || '';
         document.getElementById('phone').value = data.phone || '';
-        document.getElementById('balance').value = data.balance != null ? Number(data.balance).toLocaleString() : '0';
-      } else {
-        // no document found — fallback to basic info
-        usernameEl.textContent = user.email ? user.email.split('@')[0] : 'User';
-        document.getElementById('email').value = user.email || '';
-        document.getElementById('phone').value = '';
-        document.getElementById('balance').value = '0';
+        document.getElementById('balance').value = data.balance ?? 0;
       }
     } catch (err) {
       console.error('Error loading user doc:', err);
     }
 
-    // Load coins table and start updates
     loadTable();
     startAutoUpdate();
   });
 
-  // Logout
-  document.getElementById('logout').addEventListener('click', async () => {
-    try {
-      await signOut(auth);
-      stopAutoUpdate();
-      window.location.href = 'login.html';
-    } catch (err) {
-      console.error('Error signing out', err);
-      alert('Sign out failed');
-    }
-  });
-
-  // Profile modal logic
-  profileIcon.addEventListener('click', () => profileModal.style.display = 'flex');
-  profileClose.addEventListener('click', () => profileModal.style.display = 'none');
-  window.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.style.display = 'none'; });
-
+  // SAVE PROFILE (admin can also save balance)
   profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
-    if (!user) return alert('No authenticated user');
+    if (!user) return;
 
     const emailVal = document.getElementById('email').value.trim();
     const phoneVal = document.getElementById('phone').value.trim();
+    const balanceVal = Number(document.getElementById('balance').value);
 
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      const updateData = {
         email: emailVal,
         phone: phoneVal
-      });
-      alert('Profile updated successfully!');
-      profileModal.style.display = 'none';
+      };
+
+      if (isAdmin) {
+        updateData.balance = balanceVal;
+      }
+
+      await updateDoc(doc(db, 'users', user.uid), updateData);
+
+      alert("Profile saved!");
+      profileModal.style.display = "none";
     } catch (err) {
-      console.error('Error updating profile', err);
-      alert('Failed to save profile');
+      console.error(err);
+      alert("Error saving profile.");
     }
   });
 
-  // Withdraw modal logic
+  // MODALS (withdraw, transfer, convert)
   const withdrawLink = document.getElementById('withdraw-link');
   const withdrawModal = document.getElementById('withdraw-modal');
   const withdrawClose = document.getElementById('withdraw-close');
-  const withdrawConfirm = document.getElementById('withdraw-confirm');
 
   withdrawLink.addEventListener('click', (e)=>{ e.preventDefault(); withdrawModal.style.display = 'flex'; });
   withdrawClose.addEventListener('click', ()=> withdrawModal.style.display = 'none');
-  withdrawConfirm.addEventListener('click', ()=> {
-    const method = document.getElementById('withdraw-method').value;
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    if(!amount || amount <= 0){ alert("Enter a valid amount"); return; }
-    alert(`Withdraw ${amount} via ${method} initiated!`);
-    withdrawModal.style.display = 'none';
-  });
-  withdrawModal.addEventListener('click', (e)=>{ if(e.target === withdrawModal) withdrawModal.style.display='none'; });
 
-  // Transfer modal logic
   const transferLink = document.getElementById('transfer-link');
   const transferModal = document.getElementById('transfer-modal');
   const transferClose = document.getElementById('transfer-close');
-  const transferConfirm = document.getElementById('transfer-confirm');
 
   transferLink.addEventListener('click', (e)=>{ e.preventDefault(); transferModal.style.display = 'flex'; });
   transferClose.addEventListener('click', ()=> transferModal.style.display = 'none');
-  transferConfirm.addEventListener('click', ()=> {
-    const method = document.getElementById('transfer-method').value;
-    const amount = parseFloat(document.getElementById('transfer-amount').value);
-    if(!amount || amount <= 0){ alert("Enter a valid amount"); return; }
-    alert(`Transfer ${amount} via ${method} initiated!`);
-    transferModal.style.display = 'none';
-  });
-  transferModal.addEventListener('click', (e)=>{ if(e.target === transferModal) transferModal.style.display='none'; });
 
-  // Convert modal logic
   const convertLink = document.getElementById('convert-link');
   const convertModal = document.getElementById('convert-modal');
   const convertClose = document.getElementById('convert-close');
-  const convertConfirm = document.getElementById('convert-confirm');
 
   convertLink.addEventListener('click', (e)=>{ e.preventDefault(); convertModal.style.display = 'flex'; });
   convertClose.addEventListener('click', ()=> convertModal.style.display = 'none');
-  convertConfirm.addEventListener('click', ()=> {
-    const method = document.getElementById('convert-method').value;
-    const amount = parseFloat(document.getElementById('convert-amount').value);
-    if(!amount || amount <= 0){ alert("Enter a valid amount"); return; }
-    alert(`Convert ${amount} via ${method} initiated!`);
-    convertModal.style.display = 'none';
+
+  // PROFILE MODAL
+  profileIcon.addEventListener('click', ()=> profileModal.style.display = 'flex');
+  profileClose.addEventListener('click', ()=> profileModal.style.display = 'none');
+  window.addEventListener('click', (e)=>{ if(e.target === profileModal) profileModal.style.display='none'; });
+
+  // LOGOUT
+  document.getElementById('logout').addEventListener('click', async () => {
+    await signOut(auth);
+    stopAutoUpdate();
+    window.location.href = "login.html";
   });
-  convertModal.addEventListener('click', (e)=>{ if(e.target === convertModal) convertModal.style.display='none'; });
 
 </script>
+
 </body>
 </html>
