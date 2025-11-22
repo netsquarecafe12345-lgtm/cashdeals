@@ -21,12 +21,13 @@
         signInWithEmailAndPassword 
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    import { 
+    import {
         getFirestore,
         doc,
         getDoc
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+    // Firebase configuration
     const firebaseConfig = {
         apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
         authDomain: "cashdeals-185df.firebaseapp.com",
@@ -52,22 +53,21 @@
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            
-            // Fetch role from Firestore
+
+            // Fetch user from Firestore
             const userDoc = await getDoc(doc(db, "clients", user.uid));
 
             if (!userDoc.exists()) {
-                alert("Error: User data not found.");
+                alert("Error: User record not found in database.");
                 return;
             }
 
             const userData = userDoc.data();
 
-            // Role redirect
             if (userData.role === "admin") {
-                window.location.href = "admin.html";   // 🔥 ADMIN
+                window.location.href = "admin.html";
             } else {
-                window.location.href = "index.html";   // 🔥 USER
+                window.location.href = "index.html";
             }
 
         } catch (error) {
@@ -76,7 +76,5 @@
     });
 </script>
 
-
 </body>
 </html>
-
