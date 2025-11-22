@@ -54,7 +54,7 @@
             const user = userCredential.user;
 
             // Save user data in Firestore (using UID as doc ID)
-            await setDoc(doc(db, "clients", user.uid), {
+           await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: email,
                 username: username,
@@ -74,3 +74,4 @@
 
 </body>
 </html>
+
