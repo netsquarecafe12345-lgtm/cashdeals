@@ -111,11 +111,12 @@
     position: absolute; top: 10px; right: 15px; font-weight: bold;
     font-size: 20px; cursor: pointer;
   }
+
+  /* small utilities */
+  .hidden { display: none; }
 </style>
 </head>
 <body>
-
-
 
 <!-- Dashboard -->
 <div id="dashboard">
@@ -164,7 +165,6 @@
   </div>
 </div>
 
-
 <!-- Profile Modal -->
 <div id="profile-modal" class="modal" style="display:none;">
   <div class="modal-content">
@@ -173,24 +173,24 @@
     <form id="profile-form">
       <label for="email">Email:</label>
       <input type="email" id="email" required><br><br>
-      
+
       <label for="phone">Phone:</label>
       <input type="tel" id="phone" required><br><br>
-      
+
       <label for="balance">Balance:</label>
       <input type="number" id="balance" disabled style="background:#eee; cursor:not-allowed;">
 
-      
       <button type="submit">Save</button>
     </form>
   </div>
 </div>
+
  <!-- Withdraw Modal -->
 <div id="withdraw-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
   <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
     <h3>Withdraw Funds</h3>
     <p>Select Payment Option:</p>
-    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
+    <select id="withdraw-method" style="width:100%; padding:10px; margin-bottom:15px;">
       <option value="BTC">BTC</option>
       <option value="Coins">Coins</option>
       <option value="Alipay">Alipay</option>
@@ -207,7 +207,7 @@
   <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
     <h3>Transfer Funds</h3>
     <p>Select Payment Option:</p>
-    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
+    <select id="transfer-method" style="width:100%; padding:10px; margin-bottom:15px;">
       <option value="BTC">BTC</option>
       <option value="Coins">Coins</option>
       <option value="Alipay">Alipay</option>
@@ -218,12 +218,13 @@
     <span id="transfer-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
   </div>
 </div>
+
 <!-- Conversion Modal -->
 <div id="convert-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
   <div style="background:white; padding:20px; border-radius:10px; width:350px; position:relative;">
     <h3>Convert BTC</h3>
     <p>Select Coins for Conversion:</p>
-    <select id="payment-method" style="width:100%; padding:10px; margin-bottom:15px;">
+    <select id="convert-method" style="width:100%; padding:10px; margin-bottom:15px;">
       <option value="ETH">ETH</option>
       <option value="USDT">USDT</option>
       <option value="USDC">USDC</option>
@@ -232,199 +233,43 @@
       <option value="APE">APE</option>
       <option value="ASTER">ASTER</option>
     </select>
-    <input type="number" id="transfer-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
+    <input type="number" id="convert-amount" placeholder="Amount" style="width:100%; padding:10px; margin-bottom:15px;">
     <button id="convert-confirm" style="width:100%; padding:10px; background:#1e90ff; color:white; border:none; border-radius:5px;">Confirm</button>
     <span id="convert-close" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">X</span>
   </div>
 </div>
 
-<!-- FIREBASE IMPORT -->
+<!-- FIREBASE IMPORT & LOGIC -->
 <script type="module">
-import { 
-  initializeApp 
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
 
-import { 
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+    authDomain: "cashdeals-185df.firebaseapp.com",
+    projectId: "cashdeals-185df",
+    storageBucket: "cashdeals-185df.appspot.com",
+    messagingSenderId: "749879075742",
+    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+  };
 
-import { 
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
+  // DOM refs
+  const dashboard = document.getElementById('dashboard');
+  const usernameEl = document.getElementById('username');
+  const balanceInput = document.getElementById('balance');
+  const profileIcon = document.getElementById('profile-icon');
+  const profileModal = document.getElementById('profile-modal');
+  const profileClose = document.getElementById('profile-close');
+  const profileForm = document.getElementById('profile-form');
 
-// --------------------------------------
-// FIREBASE CONFIG
-// --------------------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-  authDomain: "cashdeals-185df.firebaseapp.com",
-  projectId: "cashdeals-185df",
-  storageBucket: "cashdeals-185df.appspot.com",
-  messagingSenderId: "749879075742",
-  appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
-
-// init
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-
-// --------------------------------------
-// AUTH CHECK — REDIRECT IF NOT LOGGED IN
-// --------------------------------------
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  // USER LOGGED IN — LOAD DASHBOARD
-  document.getElementById("dashboard").style.display = "flex";
-
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-
-  if (userDoc.exists()) {
-    const data = userDoc.data();
-
-    document.getElementById("username").textContent = data.username;
-    document.getElementById("email").value = data.email;
-    document.getElementById("phone").value = data.phone || "";
-    document.getElementById("balance").value = data.balance.toLocaleString();
-  }
-});
-
-
-// --------------------------------------
-// LOGOUT
-// --------------------------------------
-document.getElementById("logout").addEventListener("click", () => {
-  signOut(auth).then(() => {
-    window.location.href = "login.html";
-  });
-});
-
-
-// --------------------------------------
-// PROFILE UPDATE
-// --------------------------------------
-document.getElementById("profile-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const user = auth.currentUser;
-  if (!user) return;
-
-  await updateDoc(doc(db, "users", user.uid), {
-    email: document.getElementById("email").value,
-    phone: document.getElementById("phone").value
-  });
-
-  alert("Profile updated successfully!");
-  document.getElementById("profile-modal").style.display = "none";
-});
-
-</script><!-- FIREBASE IMPORT -->
-<script type="module">
-import { 
-  initializeApp 
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-
-import { 
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
-
-import { 
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
-
-
-// --------------------------------------
-// FIREBASE CONFIG
-// --------------------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-  authDomain: "cashdeals-185df.firebaseapp.com",
-  projectId: "cashdeals-185df",
-  storageBucket: "cashdeals-185df.appspot.com",
-  messagingSenderId: "749879075742",
-  appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
-
-// init
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-
-// --------------------------------------
-// AUTH CHECK — REDIRECT IF NOT LOGGED IN
-// --------------------------------------
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  // USER LOGGED IN — LOAD DASHBOARD
-  document.getElementById("dashboard").style.display = "flex";
-
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-
-  if (userDoc.exists()) {
-    const data = userDoc.data();
-
-    document.getElementById("username").textContent = data.username;
-    document.getElementById("email").value = data.email;
-    document.getElementById("phone").value = data.phone || "";
-    document.getElementById("balance").value = data.balance.toLocaleString();
-  }
-});
-
-
-// --------------------------------------
-// LOGOUT
-// --------------------------------------
-document.getElementById("logout").addEventListener("click", () => {
-  signOut(auth).then(() => {
-    window.location.href = "login.html";
-  });
-});
-
-
-// --------------------------------------
-// PROFILE UPDATE
-// --------------------------------------
-document.getElementById("profile-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const user = auth.currentUser;
-  if (!user) return;
-
-  await updateDoc(doc(db, "users", user.uid), {
-    email: document.getElementById("email").value,
-    phone: document.getElementById("phone").value
-  });
-
-  alert("Profile updated successfully!");
-  document.getElementById("profile-modal").style.display = "none";
-});
-
-</script>
-
- <script>
- 
-  // Coin Data
+  // static coins (keeps coins present)
   const coinsData = [
     {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
     {name:"Ethereum",symbol:"ETH",price:90000,change:-1.2,market:900000000,spark:[88000,89000,89500,90500,90000],color:"#627EEA"},
@@ -438,35 +283,37 @@ document.getElementById("profile-form").addEventListener("submit", async (e) => 
     {name:"Aster",symbol:"ASTER",price:1000,change:1.8,market:450000000,spark:[990,995,1000,1010,1005],color:"#00A3FF"}
   ];
 
+  // draw sparkline
   function drawSparkline(canvas, prices, positive=true){
-    canvas.width=100; canvas.height=40;
-    const ctx=canvas.getContext('2d');
+    canvas.width = 100; canvas.height = 40;
+    const ctx = canvas.getContext('2d');
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.beginPath();
-    const max=Math.max(...prices), min=Math.min(...prices);
-    const stepX=canvas.width/(prices.length-1);
+    const max = Math.max(...prices), min = Math.min(...prices);
+    const stepX = canvas.width/(prices.length-1);
     prices.forEach((p,i)=>{
-      const x=i*stepX;
-      const y=canvas.height-((p-min)/(max-min||1))*canvas.height;
+      const x = i*stepX;
+      const y = canvas.height - ((p-min)/(max-min||1))*canvas.height;
       i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
-    ctx.strokeStyle=positive?'green':'red';
-    ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle = positive ? 'green' : 'red';
+    ctx.lineWidth = 2; ctx.stroke();
   }
 
+  // render coins table
   function loadTable(){
-    const tbody=document.querySelector("#coins-table tbody");
-    tbody.innerHTML='';
+    const tbody = document.querySelector("#coins-table tbody");
+    tbody.innerHTML = '';
     coinsData.forEach((coin,i)=>{
-      const tr=document.createElement('tr');
-      const changeClass=coin.change>=0?'positive':'negative';
+      const tr = document.createElement('tr');
+      const changeClass = coin.change >= 0 ? 'positive' : 'negative';
 
       const logoDiv = document.createElement('div');
       logoDiv.className = 'coin-logo';
       logoDiv.style.backgroundColor = coin.color;
       logoDiv.textContent = coin.symbol.substring(0,3);
 
-      tr.innerHTML=`
+      tr.innerHTML = `
         <td>${i+1}</td>
         <td class="coin-name"></td>
         <td>${coin.price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
@@ -479,10 +326,11 @@ document.getElementById("profile-form").addEventListener("submit", async (e) => 
       coinNameCell.appendChild(logoDiv);
       coinNameCell.appendChild(document.createTextNode(` ${coin.symbol} - ${coin.name}`));
       tbody.appendChild(tr);
-      drawSparkline(tr.querySelector('canvas'), coin.spark, coin.change>=0);
+      drawSparkline(tr.querySelector('canvas'), coin.spark, coin.change >= 0);
     });
   }
 
+  // Updates prices and charts periodically (simulated)
   function updatePricesAndCharts() {
     coinsData.forEach((coin, i) => {
       const changePercent = (Math.random() * 2 - 1) * 1;
@@ -505,145 +353,147 @@ document.getElementById("profile-form").addEventListener("submit", async (e) => 
     });
   }
 
-  // Auto-login
-  const currentUser = localStorage.getItem('currentUser');
-  if(currentUser){
-    const users=JSON.parse(localStorage.getItem('users'));
-    if(users[currentUser]) showDashboard(users[currentUser]);
+  // Auto refresh timer handle
+  let autoUpdateTimer = null;
+  function startAutoUpdate() {
+    if (autoUpdateTimer) return;
+    autoUpdateTimer = setInterval(() => {
+      if (dashboard.style.display === 'flex') updatePricesAndCharts();
+    }, 2000);
+  }
+  function stopAutoUpdate() {
+    if (autoUpdateTimer) {
+      clearInterval(autoUpdateTimer);
+      autoUpdateTimer = null;
+    }
   }
 
-  setInterval(() => {
-    if(dashboard.style.display==='flex'){
-      updatePricesAndCharts();
-    }
-  }, 2000);
-
-  // Profile Modal logic
-  const profileIcon = document.getElementById('profile-icon');
-  const profileModal = document.getElementById('profile-modal');
-  const profileClose = document.getElementById('profile-close');
-  const profileForm = document.getElementById('profile-form');
-
-  profileIcon.addEventListener('click', () => {
-    profileModal.style.display = 'flex';
-  });
-
-  profileClose.addEventListener('click', () => {
-    profileModal.style.display = 'none';
-  });
-
-  window.addEventListener('click', (e) => {
-    if (e.target === profileModal) {	
-      profileModal.style.display = 'none';
-    }
-  });
-
-  profileForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    if(!email) {
-      alert('Please enter a valid email.');
+  // Auth state: show dashboard and load user data
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      // Not signed in — redirect to login
+      window.location.href = "login.html";
       return;
     }
-    alert(`Profile saved:\nEmail: ${email}\nPhone: ${phone}`);
-    profileModal.style.display = 'none';
-    // Optionally, add persistent profile saving here
+
+    // Show dashboard
+    dashboard.style.display = 'flex';
+
+    // Load Firestore user doc at users/{uid}
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userDocRef);
+
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        usernameEl.textContent = data.username || data.email || user.email || 'User';
+        document.getElementById('email').value = data.email || user.email || '';
+        document.getElementById('phone').value = data.phone || '';
+        document.getElementById('balance').value = data.balance != null ? Number(data.balance).toLocaleString() : '0';
+      } else {
+        // no document found — fallback to basic info
+        usernameEl.textContent = user.email ? user.email.split('@')[0] : 'User';
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('phone').value = '';
+        document.getElementById('balance').value = '0';
+      }
+    } catch (err) {
+      console.error('Error loading user doc:', err);
+    }
+
+    // Load coins table and start updates
+    loadTable();
+    startAutoUpdate();
   });
- // Modal logic for Withdraw
-const withdrawLink = document.getElementById('withdraw-link');
-const withdrawModal = document.getElementById('withdraw-modal');
-const withdrawClose = document.getElementById('withdraw-close');
-const withdrawConfirm = document.getElementById('withdraw-confirm');
 
-withdrawLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  withdrawModal.style.display = 'flex';
-});
+  // Logout
+  document.getElementById('logout').addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+      stopAutoUpdate();
+      window.location.href = 'login.html';
+    } catch (err) {
+      console.error('Error signing out', err);
+      alert('Sign out failed');
+    }
+  });
 
-withdrawClose.addEventListener('click', ()=>{
-  withdrawModal.style.display = 'none';
-});
+  // Profile modal logic
+  profileIcon.addEventListener('click', () => profileModal.style.display = 'flex');
+  profileClose.addEventListener('click', () => profileModal.style.display = 'none');
+  window.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.style.display = 'none'; });
 
-withdrawConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('withdraw-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Withdraw ${amount} via ${method} initiated!`);
-  withdrawModal.style.display = 'none';
-});
+  profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return alert('No authenticated user');
 
-// Close modal when clicking outside
-withdrawModal.addEventListener('click', (e)=>{
-  if(e.target === withdrawModal) withdrawModal.style.display='none';
-});
+    const emailVal = document.getElementById('email').value.trim();
+    const phoneVal = document.getElementById('phone').value.trim();
 
-// Modal logic for Transfer
-const transferLink = document.getElementById('transfer-link');
-const transferModal = document.getElementById('transfer-modal');
-const transferClose = document.getElementById('transfer-close');
-const transferConfirm = document.getElementById('transfer-confirm');
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        email: emailVal,
+        phone: phoneVal
+      });
+      alert('Profile updated successfully!');
+      profileModal.style.display = 'none';
+    } catch (err) {
+      console.error('Error updating profile', err);
+      alert('Failed to save profile');
+    }
+  });
 
-transferLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  transferModal.style.display = 'flex';
-});
+  // Withdraw modal logic
+  const withdrawLink = document.getElementById('withdraw-link');
+  const withdrawModal = document.getElementById('withdraw-modal');
+  const withdrawClose = document.getElementById('withdraw-close');
+  const withdrawConfirm = document.getElementById('withdraw-confirm');
 
-transferClose.addEventListener('click', ()=>{
-  transferModal.style.display = 'none';
-});
+  withdrawLink.addEventListener('click', (e)=>{ e.preventDefault(); withdrawModal.style.display = 'flex'; });
+  withdrawClose.addEventListener('click', ()=> withdrawModal.style.display = 'none');
+  withdrawConfirm.addEventListener('click', ()=> {
+    const method = document.getElementById('withdraw-method').value;
+    const amount = parseFloat(document.getElementById('withdraw-amount').value);
+    if(!amount || amount <= 0){ alert("Enter a valid amount"); return; }
+    alert(`Withdraw ${amount} via ${method} initiated!`);
+    withdrawModal.style.display = 'none';
+  });
+  withdrawModal.addEventListener('click', (e)=>{ if(e.target === withdrawModal) withdrawModal.style.display='none'; });
 
-transferConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('transfer-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Transfer ${amount} via ${method} initiated!`);
-  transferModal.style.display = 'none';
-});
+  // Transfer modal logic
+  const transferLink = document.getElementById('transfer-link');
+  const transferModal = document.getElementById('transfer-modal');
+  const transferClose = document.getElementById('transfer-close');
+  const transferConfirm = document.getElementById('transfer-confirm');
 
-// Close modal when clicking outside
-transferModal.addEventListener('click', (e)=>{
-  if(e.target === transferModal) transferModal.style.display='none';
-});
-// Modal logic for Convert
-const convertLink = document.getElementById('convert-link');
-const convertModal = document.getElementById('convert-modal');
-const convertClose = document.getElementById('convert-close');
-const convertConfirm = document.getElementById('convert-confirm');
+  transferLink.addEventListener('click', (e)=>{ e.preventDefault(); transferModal.style.display = 'flex'; });
+  transferClose.addEventListener('click', ()=> transferModal.style.display = 'none');
+  transferConfirm.addEventListener('click', ()=> {
+    const method = document.getElementById('transfer-method').value;
+    const amount = parseFloat(document.getElementById('transfer-amount').value);
+    if(!amount || amount <= 0){ alert("Enter a valid amount"); return; }
+    alert(`Transfer ${amount} via ${method} initiated!`);
+    transferModal.style.display = 'none';
+  });
+  transferModal.addEventListener('click', (e)=>{ if(e.target === transferModal) transferModal.style.display='none'; });
 
-convertLink.addEventListener('click', (e)=>{
-  e.preventDefault();
-  convertModal.style.display = 'flex';
-});
+  // Convert modal logic
+  const convertLink = document.getElementById('convert-link');
+  const convertModal = document.getElementById('convert-modal');
+  const convertClose = document.getElementById('convert-close');
+  const convertConfirm = document.getElementById('convert-confirm');
 
-convertClose.addEventListener('click', ()=>{
-  convertModal.style.display = 'none';
-});
-
-convertConfirm.addEventListener('click', ()=>{
-  const method = document.getElementById('payment-method').value;
-  const amount = parseFloat(document.getElementById('convert-amount').value);
-  if(!amount || amount <= 0){
-    alert("Enter a valid amount");
-    return;
-  }
-  alert(`Convert ${amount} via ${method} initiated!`);
-  convertModal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-convertModal.addEventListener('click', (e)=>{
-  if(e.target === convertModal) convertModal.style.display='none';
-});
-
-
-
+  convertLink.addEventListener('click', (e)=>{ e.preventDefault(); convertModal.style.display = 'flex'; });
+  convertClose.addEventListener('click', ()=> convertModal.style.display = 'none');
+  convertConfirm.addEventListener('click', ()=> {
+    const method = document.getElementById('convert-method').value;
+    const amount = parseFloat(document.getElementById('convert-amount').value);
+    if(!amount || amount <= 0){ alert("Enter a valid amount"); return; }
+    alert(`Convert ${amount} via ${method} initiated!`);
+    convertModal.style.display = 'none';
+  });
+  convertModal.addEventListener('click', (e)=>{ if(e.target === convertModal) convertModal.style.display='none'; });
 
 </script>
 </body>
