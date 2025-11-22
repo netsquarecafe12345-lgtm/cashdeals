@@ -53,8 +53,8 @@
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Save user data in Firestore (using UID as doc ID)
-           await setDoc(doc(db, "users", user.uid), {
+            // Save user data in Firestore (corrected to "users")
+            await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: email,
                 username: username,
@@ -74,4 +74,3 @@
 
 </body>
 </html>
-
