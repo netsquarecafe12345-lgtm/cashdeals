@@ -115,16 +115,7 @@
 </head>
 <body>
 
-<!-- Login / Signup -->
-<div id="auth-container">
-  <div class="auth-box">
-    <h2 id="auth-title">Login</h2>
-    <input type="text" id="auth-username" placeholder="Username" autocomplete="username" />
-    <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
-    <button id="auth-button">Login</button>
-    <div class="switch" id="switch-auth">Don't have an account? Sign Up</div>
-  </div>
-</div>
+
 
 <!-- Dashboard -->
 <div id="dashboard">
@@ -247,127 +238,192 @@
   </div>
 </div>
 
-<!-- Include Firebase Authentication SDK -->
+<!-- FIREBASE IMPORT -->
 <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
-  import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
+import { 
+  initializeApp 
+} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
 
-  // Firebase configuration (your config details)
-  const firebaseConfig = {
-    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-    authDomain: "cashdeals-185df.firebaseapp.com",
-    projectId: "cashdeals-185df",
-    storageBucket: "cashdeals-185df.appspot.com",
-    messagingSenderId: "749879075742",
-    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-  };
+import { 
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-</script>
+import { 
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
 
-<script>
-  // Elements
-  const authContainer = document.getElementById('auth-container');
-  const dashboard = document.getElementById('dashboard');
-  const authTitle = document.getElementById('auth-title');
-  const authButton = document.getElementById('auth-button');
-  const switchAuth = document.getElementById('switch-auth');
-  const authUsername = document.getElementById('auth-username');
-  const authPassword = document.getElementById('auth-password');
-  const usernameDisplay = document.getElementById('username');
-  const balanceDisplay = document.getElementById('balance');
-  const logoutBtn = document.getElementById('logout');
 
-  let loginMode = true;
+// --------------------------------------
+// FIREBASE CONFIG
+// --------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+  authDomain: "cashdeals-185df.firebaseapp.com",
+  projectId: "cashdeals-185df",
+  storageBucket: "cashdeals-185df.appspot.com",
+  messagingSenderId: "749879075742",
+  appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
 
-  // Initialize users storage if none
-  if (!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify({}));
+// init
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  // Toggle login/signup UI
-  switchAuth.addEventListener('click', () => {
-    loginMode = !loginMode;
-    if(loginMode) {
-      authTitle.textContent = 'Login';
-      authButton.textContent = 'Login';
-      switchAuth.textContent = "Don't have an account? Sign Up";
-      authPassword.placeholder = 'Password';
-      authPassword.autocomplete = 'current-password';
-    } else {
-      authTitle.textContent = 'Sign Up';
-      authButton.textContent = 'Sign Up';
-      switchAuth.textContent = "Already have an account? Login";
-      authPassword.placeholder = 'Choose Password';
-      authPassword.autocomplete = 'new-password';
-    }
-    authUsername.value = '';
-    authPassword.value = '';
-    authUsername.focus();
-  });
 
-  // Login or Signup handler
-  authButton.addEventListener('click', () => {
-    const username = authUsername.value.trim();
-    const password = authPassword.value;
-
-    if (!username || !password) {
-      alert("Enter username and password");
-      return;
-    }
-
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-
-    if (loginMode) {
-      if(users[username] && users[username].password === password) {
-        localStorage.setItem('currentUser', username);
-        showDashboard(users[username]);
-        authUsername.value = '';
-        authPassword.value = '';
-      } else {
-        alert('Invalid username or password');
-      }
-    } else {
-      if(users[username]) {
-        alert('Username already exists');
-      } else {
-        users[username] = { password: password, balance: 150000 };
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('Account created! You can now login.');
-        loginMode = true;
-        authTitle.textContent = 'Login';
-        authButton.textContent = 'Login';
-        switchAuth.textContent = "Don't have an account? Sign Up";
-        authPassword.placeholder = 'Password';
-        authPassword.autocomplete = 'current-password';
-        authUsername.value = '';
-        authPassword.value = '';
-        authUsername.focus();
-      }
-    }
-  });
-
-  // Show Dashboard
-  function showDashboard(userData){
-    authContainer.style.display = 'none';
-    dashboard.style.display = 'flex';
-    usernameDisplay.textContent = localStorage.getItem('currentUser');
-    balanceDisplay.textContent = userData.balance.toLocaleString();
-    loadTable();
+// --------------------------------------
+// AUTH CHECK — REDIRECT IF NOT LOGGED IN
+// --------------------------------------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
   }
 
-  // Logout clears session and show login screen
-  logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('currentUser');
-    dashboard.style.display = 'none';
-    authContainer.style.display = 'flex';
-    authUsername.value = '';
-    authPassword.value = '';
-    authUsername.focus();
+  // USER LOGGED IN — LOAD DASHBOARD
+  document.getElementById("dashboard").style.display = "flex";
+
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+
+  if (userDoc.exists()) {
+    const data = userDoc.data();
+
+    document.getElementById("username").textContent = data.username;
+    document.getElementById("email").value = data.email;
+    document.getElementById("phone").value = data.phone || "";
+    document.getElementById("balance").value = data.balance.toLocaleString();
+  }
+});
+
+
+// --------------------------------------
+// LOGOUT
+// --------------------------------------
+document.getElementById("logout").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  });
+});
+
+
+// --------------------------------------
+// PROFILE UPDATE
+// --------------------------------------
+document.getElementById("profile-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await updateDoc(doc(db, "users", user.uid), {
+    email: document.getElementById("email").value,
+    phone: document.getElementById("phone").value
   });
 
+  alert("Profile updated successfully!");
+  document.getElementById("profile-modal").style.display = "none";
+});
+
+</script><!-- FIREBASE IMPORT -->
+<script type="module">
+import { 
+  initializeApp 
+} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+
+import { 
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+
+import { 
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+
+// --------------------------------------
+// FIREBASE CONFIG
+// --------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+  authDomain: "cashdeals-185df.firebaseapp.com",
+  projectId: "cashdeals-185df",
+  storageBucket: "cashdeals-185df.appspot.com",
+  messagingSenderId: "749879075742",
+  appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+};
+
+// init
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+
+// --------------------------------------
+// AUTH CHECK — REDIRECT IF NOT LOGGED IN
+// --------------------------------------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // USER LOGGED IN — LOAD DASHBOARD
+  document.getElementById("dashboard").style.display = "flex";
+
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+
+  if (userDoc.exists()) {
+    const data = userDoc.data();
+
+    document.getElementById("username").textContent = data.username;
+    document.getElementById("email").value = data.email;
+    document.getElementById("phone").value = data.phone || "";
+    document.getElementById("balance").value = data.balance.toLocaleString();
+  }
+});
+
+
+// --------------------------------------
+// LOGOUT
+// --------------------------------------
+document.getElementById("logout").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  });
+});
+
+
+// --------------------------------------
+// PROFILE UPDATE
+// --------------------------------------
+document.getElementById("profile-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await updateDoc(doc(db, "users", user.uid), {
+    email: document.getElementById("email").value,
+    phone: document.getElementById("phone").value
+  });
+
+  alert("Profile updated successfully!");
+  document.getElementById("profile-modal").style.display = "none";
+});
+
+</script>
+
+ <script>
+ 
   // Coin Data
   const coinsData = [
     {name:"Bitcoin",symbol:"BTC",price:1200000,change:2.5,market:2400000000,spark:[1150000,1160000,1175000,1180000,1190000,1200000],color:"#F7931A"},
