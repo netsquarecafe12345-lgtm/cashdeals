@@ -21,7 +21,12 @@
         signInWithEmailAndPassword 
     } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // Firebase configuration
+    import { 
+        getFirestore,
+        doc,
+        getDoc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
         authDomain: "cashdeals-185df.firebaseapp.com",
@@ -33,8 +38,8 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // Login event
     document.getElementById("login-button").addEventListener("click", async () => {
         const email = document.getElementById("login-email").value.trim();
         const password = document.getElementById("login-password").value.trim();
@@ -45,26 +50,33 @@
         }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            // Fetch role from Firestore
+            const userDoc = await getDoc(doc(db, "clients", user.uid));
 
-            // Redirect to your GitHub Pages homepage (index.html)
-            window.location.href = "https://netsquarecafe12345-lgtm.github.io/cashdeals/index.html";
-
-        } catch (error) {
-            let message = "Login failed.";
-
-            if (error.code === "auth/user-not-found") {
-                message = "No account found with this email.";
-            } else if (error.code === "auth/wrong-password") {
-                message = "Incorrect password.";
-            } else if (error.code === "auth/invalid-email") {
-                message = "Invalid email address.";
+            if (!userDoc.exists()) {
+                alert("Error: User data not found.");
+                return;
             }
 
-            alert(message);
+            const userData = userDoc.data();
+
+            // Role redirect
+            if (userData.role === "admin") {
+                window.location.href = "admin.html";   // 🔥 ADMIN
+            } else {
+                window.location.href = "index.html";   // 🔥 USER
+            }
+
+        } catch (error) {
+            alert("Login failed: " + error.message);
         }
     });
 </script>
 
+
 </body>
 </html>
+
