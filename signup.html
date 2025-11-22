@@ -9,19 +9,13 @@
 
 <h2>Create Account</h2>
 
-<!-- Email input -->
 <input type="email" id="signup-email" placeholder="Enter your email" required><br><br>
-
-<!-- Password input -->
 <input type="password" id="signup-password" placeholder="Enter your password" required><br><br>
 
-<!-- Signup button -->
 <button id="signup-button">Create Account</button><br><br>
 
-<!-- Link to login page if already have an account -->
 <p>Already have an account? <a href="login.html">Log in</a></p>
 
-<!-- Add the script below, after all elements are loaded -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { 
@@ -31,8 +25,8 @@ import {
 
 import { 
     getFirestore, 
-    collection, 
-    addDoc 
+    doc, 
+    setDoc 
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 // Firebase config
@@ -45,36 +39,50 @@ const firebaseConfig = {
     appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 document.getElementById("signup-button").addEventListener("click", async () => {
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
-    const username = email.split('@')[0]; // simple default username
-    const phone = ""; // You can add a phone input if you want
+    const email = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value.trim();
+
+    if (!email || !password) {
+        alert("Please fill in all fields.");
+        return;
+    }
 
     try {
-        // 1. Create Auth user
+        // Create Auth user
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // 2. Save user info in Firestore (clients collection)
-        await addDoc(collection(db, "clients"), {
-            uid: user.uid,
+        // Auto-generate username (email before @)
+        const username = email.split('@')[0];
+
+        // Save user profile in Firestore under users/{uid}
+        await setDoc(doc(db, "users", user.uid), {
             email: email,
             username: username,
-            phone: phone,
-            password: password, // optional, but in production, do NOT store raw password
+            phone: "",
             balance: 0
         });
 
-        alert("Account created! You can now log in.");
-        window.location.href = "login.html"; // Redirect to login page after sign up
+        alert("Account created successfully!");
+        window.location.href = "login.html";
+
     } catch (error) {
-        alert("Signup failed: " + error.message); // Show error message if something goes wrong
+        let message = "Signup failed.";
+
+        if (error.code === "auth/email-already-in-use") {
+            message = "This email is already registered.";
+        } else if (error.code === "auth/weak-password") {
+            message = "Password must be at least 6 characters.";
+        } else if (error.code === "auth/invalid-email") {
+            message = "Invalid email format.";
+        }
+
+        alert(message);
     }
 });
 </script>
