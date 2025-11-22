@@ -17,74 +17,59 @@
 <p>Already have an account? <a href="login.html">Log in</a></p>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { 
+        getAuth, 
+        createUserWithEmailAndPassword 
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-import { 
-    getFirestore, 
-    doc, 
-    setDoc 
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { 
+        getFirestore,
+        doc,
+        setDoc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
-    authDomain: "cashdeals-185df.firebaseapp.com",
-    projectId: "cashdeals-185df",
-    storageBucket: "cashdeals-185df.appspot.com",
-    messagingSenderId: "749879075742",
-    appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
-};
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyAN0MfvvHmznveLEoIV8vLNorRO6F2VAs0",
+        authDomain: "cashdeals-185df.firebaseapp.com",
+        projectId: "cashdeals-185df",
+        storageBucket: "cashdeals-185df.appspot.com",
+        messagingSenderId: "749879075742",
+        appId: "1:749879075742:web:a82980caf53bef5c9aac8f"
+    };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-document.getElementById("signup-button").addEventListener("click", async () => {
-    const email = document.getElementById("signup-email").value.trim();
-    const password = document.getElementById("signup-password").value.trim();
+    document.getElementById("signup-button").addEventListener("click", async () => {
+        const email = document.getElementById("signup-email").value.trim();
+        const password = document.getElementById("signup-password").value.trim();
+        const username = email.split("@")[0];
 
-    if (!email || !password) {
-        alert("Please fill in all fields.");
-        return;
-    }
+        try {
+            // Create user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-    try {
-        // Create Auth user
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+            // Save user data in Firestore (using UID as doc ID)
+            await setDoc(doc(db, "clients", user.uid), {
+                uid: user.uid,
+                email: email,
+                username: username,
+                phone: "",
+                balance: 0,
+                role: "user"
+            });
 
-        // Auto-generate username (email before @)
-        const username = email.split('@')[0];
+            alert("Account created! You can now log in.");
+            window.location.href = "login.html";
 
-        // Save user profile in Firestore under users/{uid}
-        await setDoc(doc(db, "users", user.uid), {
-            email: email,
-            username: username,
-            phone: "",
-            balance: 0
-        });
-
-        alert("Account created successfully!");
-        window.location.href = "login.html";
-
-    } catch (error) {
-        let message = "Signup failed.";
-
-        if (error.code === "auth/email-already-in-use") {
-            message = "This email is already registered.";
-        } else if (error.code === "auth/weak-password") {
-            message = "Password must be at least 6 characters.";
-        } else if (error.code === "auth/invalid-email") {
-            message = "Invalid email format.";
+        } catch (error) {
+            alert("Signup failed: " + error.message);
         }
-
-        alert(message);
-    }
-});
+    });
 </script>
 
 </body>
